@@ -99,7 +99,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '—';
 
   return (
-    <div className="flex flex-col px-5 pt-8 pb-[120px] max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
+    <div className="flex flex-col px-5 pt-8 pb-[80px] max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
       {/* Date Block */}
       <div className="shrink-0 mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[340px] mx-auto">
         <div className="font-condensed text-[64px] tracking-tight font-extrabold text-[#1a1a1a] leading-none uppercase m-0">
