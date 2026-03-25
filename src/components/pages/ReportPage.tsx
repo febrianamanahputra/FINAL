@@ -65,18 +65,61 @@ export default function ReportPage({ state, locData, updateLocData, onBack }: Re
     const areaStr = baris.area ? ` | ${baris.area.nama}${baris.area.kategori ? ` ${baris.area.kategori}` : ''}` : '';
     const caption = `- Pek. ${baris.teks.trim()}${areaStr}`;
 
-    if (navigator.share && navigator.canShare) {
+    let shareSuccess = false;
+
+    if (navigator.share) {
       try {
-        await navigator.share({
-          files: files,
-          title: 'Laporan Foto',
-          text: caption
-        });
-      } catch (err) {
-        console.log('Share failed or cancelled', err);
+        const canShareFiles = navigator.canShare ? navigator.canShare({ files }) : true;
+        
+        if (canShareFiles) {
+          await navigator.share({
+            files: files,
+            title: 'Laporan Foto',
+            text: caption
+          });
+          shareSuccess = true;
+        } else {
+          throw new Error("File sharing not supported");
+        }
+      } catch (err: any) {
+        console.log('Share with files failed:', err);
+        if (err.name === 'AbortError') return; // User cancelled
+        
+        // Fallback to text only share
+        try {
+          await navigator.share({
+            title: 'Laporan Foto',
+            text: caption
+          });
+          shareSuccess = true;
+          alert('Browser/Aplikasi ini membatasi share foto langsung.\n\nTeks keterangan telah diteruskan, silakan lampirkan foto secara manual di WhatsApp.');
+        } catch (fallbackErr: any) {
+          if (fallbackErr.name === 'AbortError') return;
+          console.log('Fallback share failed:', fallbackErr);
+        }
       }
-    } else {
-      alert('Browser device ini tidak mendukung share foto langsung.');
+    }
+
+    if (!shareSuccess) {
+      // Fallback 2: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(caption);
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const confirmMsg = 'Browser ini memblokir share foto.\n\nTeks telah disalin! Apakah Anda ingin pindah ke Chrome agar bisa share foto?';
+        
+        if (window.confirm(confirmMsg)) {
+          if (isAndroid) {
+            const url = window.location.href.replace(/^https?:\/\//, '');
+            window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+          } else {
+            alert('Ketuk ikon 3 titik/panah di pojok layar lalu pilih "Buka di Browser Utama".');
+          }
+        } else {
+          alert('Silakan buka WA, pilih foto dari galeri, lalu "Paste/Tempel" keterangannya.');
+        }
+      } catch (clipboardErr) {
+        alert('Gagal share. Silakan copy teks ini manual:\n\n' + caption);
+      }
     }
   };
 

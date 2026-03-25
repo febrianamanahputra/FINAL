@@ -7,6 +7,7 @@ import DanaPage from './components/pages/DanaPage';
 import ToolsPage from './components/pages/ToolsPage';
 import CatatanPage from './components/pages/CatatanPage';
 import LinkPage from './components/pages/LinkPage';
+import InAppBrowserWarning from './components/InAppBrowserWarning';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -69,6 +70,7 @@ export default function App() {
 
   return (
     <div className="w-full h-full bg-white relative overflow-hidden">
+      <InAppBrowserWarning />
       <AnimatePresence mode="wait">
         <motion.div
           key={currentPage}
