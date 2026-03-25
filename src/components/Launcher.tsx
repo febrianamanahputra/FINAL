@@ -63,7 +63,11 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !state.activeLoc) return;
+    if (!file) return;
+    if (!state.activeLoc) {
+      setIsLocOpen(true); // Open location dialog if no location selected
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
@@ -95,7 +99,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '—';
 
   return (
-    <div className="flex flex-col px-5 pt-8 pb-12 max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
+    <div className="flex flex-col px-5 pt-6 pb-8 max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar justify-between">
       {/* Date Block */}
       <div className="shrink-0 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[340px] mx-auto">
         <div className="font-condensed text-[64px] tracking-tight font-extrabold text-[#1a1a1a] leading-none uppercase m-0">
@@ -115,10 +119,10 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
       </div>
 
       {/* Photo Section */}
-      <div className="w-full max-w-[340px] mx-auto relative mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 h-[220px] shrink-0">
+      <div className="flex-1 w-full max-w-[340px] mx-auto relative mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 min-h-[240px] max-h-[380px]">
         <label className="absolute inset-0 w-full h-full bg-[#f0f0f0] overflow-hidden flex items-center justify-center cursor-pointer active:scale-[0.995] transition-transform border border-black/5 shadow-sm">
           {coverPhoto ? (
-            <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover absolute inset-0 z-10" />
+            <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover absolute inset-0 z-10" referrerPolicy="no-referrer" />
           ) : (
             <div className="flex flex-col items-center gap-1.5 opacity-35">
               <Camera size={28} strokeWidth={1.5} />
