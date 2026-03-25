@@ -95,7 +95,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '—';
 
   return (
-    <div className="flex flex-col px-5 pt-4 pb-8 max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
+    <div className="flex flex-col px-5 pt-8 pb-12 max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
       {/* Date Block */}
       <div className="shrink-0 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[340px] mx-auto">
         <div className="font-condensed text-[64px] tracking-tight font-extrabold text-[#1a1a1a] leading-none uppercase m-0">
@@ -115,7 +115,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
       </div>
 
       {/* Photo Section */}
-      <div className="flex-1 w-full max-w-[340px] mx-auto relative mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700 min-h-[200px]">
+      <div className="w-full max-w-[340px] mx-auto relative mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 h-[220px] shrink-0">
         <label className="absolute inset-0 w-full h-full bg-[#f0f0f0] overflow-hidden flex items-center justify-center cursor-pointer active:scale-[0.995] transition-transform border border-black/5 shadow-sm">
           {coverPhoto ? (
             <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover absolute inset-0 z-10" />
@@ -131,7 +131,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
 
       {/* Dock */}
       <div className="shrink-0 w-full max-w-[340px] mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <div className="flex justify-between w-full mb-5">
+        <div className="flex justify-between w-full mb-6">
           {[
             { id: 'report', icon: FileText },
             { id: 'material', icon: Package },
