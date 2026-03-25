@@ -1,0 +1,627 @@
+import React, { useState } from 'react';
+import { AppState, LocData } from '../../types';
+import PageHeader from '../PageHeader';
+import { Plus, Trash2, Sparkles, Loader2, X, ChevronDown, ChevronUp, Edit3 } from 'lucide-react';
+import Overlay from '../Overlay';
+import { capitalizeWords } from '../../utils';
+import { GoogleGenAI, Type } from '@google/genai';
+
+interface ToolsPageProps {
+  state: AppState;
+  locData: LocData;
+  updateLocData: (locId: string, updater: (prev: LocData) => LocData) => void;
+  onBack: () => void;
+}
+
+type TabType = 'action' | 'volume' | 'beton';
+
+export default function ToolsPage({ state, locData, updateLocData, onBack }: ToolsPageProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('action');
+  const locName = state.locations.find(l => l.id === state.activeLoc)?.name || '—';
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <PageHeader
+        title="Tools"
+        subtitle={locName}
+        onBack={onBack}
+      />
+      
+      <div className="flex gap-0.5 px-5 pt-2 border-b border-black/5 shrink-0 overflow-x-auto hide-scrollbar">
+        {[
+          { id: 'action', label: 'Action Plan' },
+          { id: 'volume', label: 'Volume' },
+          { id: 'beton', label: 'Beton' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as TabType)}
+            className={`px-2 py-1.5 text-[10px] font-medium whitespace-nowrap border-b-2 transition-colors ${
+              activeTab === tab.id 
+                ? 'border-primary text-[#1a1a1a]' 
+                : 'border-transparent text-black/35 hover:text-black/60'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 py-4 max-w-[480px] mx-auto w-full">
+        {activeTab === 'action' && <ActionPlanTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} />}
+        {activeTab === 'volume' && <VolumeTab />}
+        {activeTab === 'beton' && <BetonTab />}
+      </div>
+    </div>
+  );
+}
+
+function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, updateLocData: any, locId: string | null }) {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [taskName, setTaskName] = useState('');
+  
+  const [materials, setMaterials] = useState<string[]>([]);
+  const [tools, setTools] = useState<string[]>([]);
+  const [labor, setLabor] = useState('');
+  const [targetDays, setTargetDays] = useState('');
+  const [progress, setProgress] = useState('0');
+  const [constraints, setConstraints] = useState('');
+  const [sni, setSni] = useState('');
+
+  const [matInput, setMatInput] = useState('');
+  const [toolInput, setToolInput] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const [viewMode, setViewMode] = useState<'item' | 'labor'>('item');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editTaskId, setEditTaskId] = useState<string | null>(null);
+
+  const pekerjaan = locData.pekerjaan || [];
+
+  const handleAiAnalyze = async () => {
+    if (!taskName.trim()) return alert('Isi nama pekerjaan dulu untuk dianalisis AI!');
+    setIsAiLoading(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Analisis pekerjaan konstruksi berikut: "${taskName}". Berikan daftar material yang dibutuhkan, alat yang dibutuhkan, tenaga kerja yang disarankan, estimasi target hari (angka saja). Untuk 'constraints', berikan analisis yang sangat komprehensif dan kompleks mengenai kemungkinan kendala di lapangan, risiko kegagalan, dan hal-hal krusial apa saja yang harus sangat diperhatikan (Quality Control & Safety). Berikan juga standar SNI yang berlaku.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              materials: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Daftar material" },
+              tools: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Daftar alat" },
+              labor: { type: Type.STRING, description: "Saran tenaga kerja (misal: 1 Tukang Cat, 1 Kenek)" },
+              targetDays: { type: Type.NUMBER, description: "Estimasi hari (angka)" },
+              constraints: { type: Type.STRING, description: "Analisis komprehensif kendala dan hal yang harus diperhatikan" },
+              sni: { type: Type.STRING, description: "Standar SNI yang berlaku" }
+            }
+          }
+        }
+      });
+
+      const data = JSON.parse(response.text || '{}');
+      if (data.materials) setMaterials(data.materials);
+      if (data.tools) setTools(data.tools);
+      if (data.labor) setLabor(data.labor);
+      if (data.targetDays) setTargetDays(data.targetDays.toString());
+      if (data.constraints) setConstraints(data.constraints);
+      if (data.sni) setSni(data.sni);
+    } catch (error) {
+      console.error('AI Error:', error);
+      alert('Gagal menganalisis dengan AI. Pastikan API Key valid.');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setEditTaskId(null);
+    setTaskName('');
+    setMaterials([]);
+    setTools([]);
+    setLabor('');
+    setTargetDays('');
+    setProgress('0');
+    setConstraints('');
+    setSni('');
+    setMatInput('');
+    setToolInput('');
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEdit = (task: any) => {
+    setEditTaskId(task.id);
+    setTaskName(task.teks || '');
+    setMaterials(task.materials || []);
+    setTools(task.tools || []);
+    setLabor(task.labor || '');
+    setTargetDays(task.targetDays || '');
+    setProgress(task.progress || '0');
+    setConstraints(task.constraints || '');
+    setSni(task.sni || '');
+    setMatInput('');
+    setToolInput('');
+    setIsFormOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!taskName.trim()) return alert('Nama pekerjaan tidak boleh kosong!');
+    if (locId) {
+      updateLocData(locId, (prev: any) => {
+        const newTask = { 
+          id: editTaskId || `task_${Date.now()}`, 
+          teks: taskName.trim(), 
+          isDone: false,
+          materials,
+          tools,
+          labor,
+          targetDays,
+          progress,
+          constraints,
+          sni
+        };
+
+        let newPekerjaan = prev.pekerjaan || [];
+        if (editTaskId) {
+          newPekerjaan = newPekerjaan.map((p: any) => p.id === editTaskId ? newTask : p);
+        } else {
+          newPekerjaan = [newTask, ...newPekerjaan];
+        }
+
+        return { ...prev, pekerjaan: newPekerjaan };
+      });
+    }
+    setIsFormOpen(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Yakin ingin menghapus pekerjaan ini?')) {
+      if (locId) {
+        updateLocData(locId, (prev: any) => ({
+          ...prev,
+          pekerjaan: (prev.pekerjaan || []).filter((p: any) => p.id !== id)
+        }));
+      }
+    }
+  };
+
+  const addMaterial = () => {
+    if (matInput.trim()) {
+      setMaterials([...materials, capitalizeWords(matInput.trim())]);
+      setMatInput('');
+    }
+  };
+
+  const addTool = () => {
+    if (toolInput.trim()) {
+      setTools([...tools, capitalizeWords(toolInput.trim())]);
+      setToolInput('');
+    }
+  };
+
+  const sortedPekerjaan = [...pekerjaan].sort((a, b) => {
+    if (viewMode === 'labor') {
+      return (a.labor || 'ZZZ').localeCompare(b.labor || 'ZZZ');
+    }
+    return 0;
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <button onClick={handleOpenAdd} className="w-full bg-primary text-primary-text font-medium text-xs p-2.5 rounded-lg flex items-center justify-center gap-1.5">
+        <Plus size={14} /> Tambah Pekerjaan
+      </button>
+
+      <div className="flex bg-black/5 p-1 rounded-lg mt-1">
+        <button onClick={() => setViewMode('item')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'item' ? 'bg-white shadow-sm text-[#1a1a1a]' : 'text-black/40'}`}>Berdasarkan Item</button>
+        <button onClick={() => setViewMode('labor')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'labor' ? 'bg-white shadow-sm text-[#1a1a1a]' : 'text-black/40'}`}>Berdasarkan Tukang</button>
+      </div>
+      
+      <div className="flex flex-col gap-2.5 mt-1">
+        {sortedPekerjaan.length === 0 ? (
+          <div className="text-[11px] text-black/25 text-center py-6">Belum ada action plan.</div>
+        ) : (
+          sortedPekerjaan.map((p: any) => {
+            const primaryText = viewMode === 'item' ? p.teks : (p.labor || 'Tanpa Tukang');
+            const secondaryText = viewMode === 'item' ? (p.labor || 'Tanpa Tukang') : p.teks;
+            const isExpanded = expandedId === p.id;
+
+            return (
+              <div key={p.id} className="bg-white border border-black/10 shadow-sm rounded-[10px] overflow-hidden">
+                <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-3 flex justify-between items-center cursor-pointer hover:bg-black/5 transition-colors">
+                  <div className="flex-1 pr-3">
+                    <div className="text-sm font-bold text-[#1a1a1a] leading-tight">{primaryText}</div>
+                    <div className="text-[11px] text-black/50 mt-1">{secondaryText}</div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-xs font-bold text-primary-text bg-primary/20 px-2 py-1 rounded-md">{p.progress || 0}%</div>
+                    {isExpanded ? <ChevronUp size={16} className="text-black/40" /> : <ChevronDown size={16} className="text-black/40" />}
+                  </div>
+                </div>
+                
+                {isExpanded && (
+                  <div className="px-3 pb-3 pt-2 border-t border-black/5 flex flex-col gap-3 bg-black/[0.02]">
+                    {p.materials?.length > 0 && (
+                      <div>
+                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1.5">Material</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {p.materials.map((m: string, i: number) => (
+                            <span key={i} className="bg-[#e8f5e9] text-[#2e7d32] text-[10px] px-2 py-1 rounded-md border border-[#c8e6c9]">{m}</span>
+                          ))}
+                        </div>
+                        <div className="h-[1px] w-full bg-[#25D366] mt-3 opacity-40"></div>
+                      </div>
+                    )}
+                    
+                    {p.tools?.length > 0 && (
+                      <div>
+                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1.5">Alat</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {p.tools.map((t: string, i: number) => (
+                            <span key={i} className="bg-[#e8f5e9] text-[#2e7d32] text-[10px] px-2 py-1 rounded-md border border-[#c8e6c9]">{t}</span>
+                          ))}
+                        </div>
+                        <div className="h-[1px] w-full bg-[#25D366] mt-3 opacity-40"></div>
+                      </div>
+                    )}
+
+                    {p.constraints && (
+                      <div>
+                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1">Kemungkinan Kendala & Perhatian</div>
+                        <div className="text-[11px] text-black/70 leading-relaxed whitespace-pre-wrap">{p.constraints}</div>
+                      </div>
+                    )}
+
+                    {p.sni && (
+                      <div>
+                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1">Standar SNI</div>
+                        <div className="text-[11px] text-black/70 leading-relaxed whitespace-pre-wrap">{p.sni}</div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-black/5">
+                      <button onClick={() => handleOpenEdit(p)} className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-md font-medium transition-colors hover:bg-blue-100">
+                        <Edit3 size={12} /> Edit Keterangan
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} className="flex items-center gap-1 text-[10px] bg-red-50 text-red-600 px-3 py-1.5 rounded-md font-medium transition-colors hover:bg-red-100">
+                        <Trash2 size={12} /> Hapus
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <Overlay isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={editTaskId ? "Edit Pekerjaan" : "Tambah Action Plan"}>
+        <div className="flex flex-col gap-3.5 pb-6">
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Nama Pekerjaan</label>
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={taskName}
+                onChange={e => setTaskName(capitalizeWords(e.target.value))}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('mat-input')?.focus(); } }}
+                placeholder="contoh: Pengecatan Lt.1"
+                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              />
+              <button 
+                onClick={handleAiAnalyze} 
+                disabled={isAiLoading || !taskName.trim()}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-[10px] px-3 flex items-center justify-center disabled:opacity-50"
+              >
+                {isAiLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Material — pilih AI atau ketik</label>
+            <div className="flex gap-2">
+              <input
+                id="mat-input"
+                value={matInput}
+                onChange={e => setMatInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addMaterial(); } }}
+                placeholder="Ketik material..."
+                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              />
+              <button onClick={addMaterial} className="bg-black/5 border border-black/10 rounded-[10px] px-3 flex items-center justify-center text-black/50 hover:bg-black/10">
+                <Plus size={16} />
+              </button>
+            </div>
+            {materials.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {materials.map((m, i) => (
+                  <div key={i} className="bg-primary/20 text-primary-text text-[10px] px-2 py-1 rounded-md flex items-center gap-1">
+                    {m} <button onClick={() => setMaterials(materials.filter((_, idx) => idx !== i))}><X size={10} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Alat — pilih AI atau ketik</label>
+            <div className="flex gap-2">
+              <input
+                id="tool-input"
+                value={toolInput}
+                onChange={e => setToolInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTool(); } }}
+                placeholder="Ketik alat..."
+                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              />
+              <button onClick={addTool} className="bg-black/5 border border-black/10 rounded-[10px] px-3 flex items-center justify-center text-black/50 hover:bg-black/10">
+                <Plus size={16} />
+              </button>
+            </div>
+            {tools.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {tools.map((t, i) => (
+                  <div key={i} className="bg-primary/20 text-primary-text text-[10px] px-2 py-1 rounded-md flex items-center gap-1">
+                    {t} <button onClick={() => setTools(tools.filter((_, idx) => idx !== i))}><X size={10} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Tukang / Tenaga</label>
+            <input
+              value={labor}
+              onChange={e => setLabor(capitalizeWords(e.target.value))}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('target-hari')?.focus(); } }}
+              placeholder="Mandor, Buruh, Sub-kon..."
+              className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Target Hari</label>
+              <input
+                id="target-hari"
+                type="number"
+                value={targetDays}
+                onChange={e => setTargetDays(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('progress-input')?.focus(); } }}
+                placeholder="0"
+                className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Progress (%)</label>
+              <input
+                id="progress-input"
+                type="number"
+                value={progress}
+                onChange={e => setProgress(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSave(); } }}
+                placeholder="0"
+                className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          {(constraints || sni) && (
+            <div className="bg-blue-50 border border-blue-100 rounded-[10px] p-3 flex flex-col gap-2 mt-1">
+              {constraints && (
+                <div>
+                  <div className="text-[9px] font-bold text-blue-800 uppercase tracking-[1px] mb-0.5">Potensi Kendala</div>
+                  <div className="text-[10px] text-blue-900 leading-relaxed">{constraints}</div>
+                </div>
+              )}
+              {sni && (
+                <div>
+                  <div className="text-[9px] font-bold text-blue-800 uppercase tracking-[1px] mb-0.5">Standar SNI</div>
+                  <div className="text-[10px] text-blue-900 leading-relaxed">{sni}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button onClick={handleSave} className="w-full bg-primary text-primary-text font-medium text-[13px] p-3 rounded-[10px] mt-2">
+            Simpan Pekerjaan
+          </button>
+        </div>
+      </Overlay>
+    </div>
+  );
+}
+
+function VolumeTab() {
+  const [p, setP] = useState('');
+  const [l, setL] = useState('');
+  const [kp, setKp] = useState('');
+  const [kl, setKl] = useState('');
+  const [kt, setKt] = useState('');
+  const [rp, setRp] = useState('');
+  const [rl, setRl] = useState('');
+  const [rt, setRt] = useState('');
+
+  const luas = (parseFloat(p) || 0) * (parseFloat(l) || 0);
+  const kubik = (parseFloat(kp) || 0) * (parseFloat(kl) || 0) * (parseFloat(kt) || 0);
+  const keliling = 2 * ((parseFloat(rp) || 0) + (parseFloat(rl) || 0));
+  const luasDinding = keliling * (parseFloat(rt) || 0);
+
+  return (
+    <div className="border border-black/10 rounded-lg overflow-hidden flex flex-col">
+      <div className="p-3.5 border-b border-black/10">
+        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Luas Persegi</div>
+        <div className="flex gap-2.5 items-end">
+          <div className="flex-1">
+            <div className="text-[9px] text-black/40 mb-1">Panjang (m)</div>
+            <input id="vol-p" type="number" value={p} onChange={e => setP(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-l')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="flex-1">
+            <div className="text-[9px] text-black/40 mb-1">Lebar (m)</div>
+            <input id="vol-l" type="number" value={l} onChange={e => setL(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kp')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="text-[13px] text-black/30 pb-2.5">=</div>
+          <div className="flex-1 bg-[#f5ffe0] p-2 text-center rounded">
+            <div className="text-[9px] text-black/40">Luas</div>
+            <div className="text-base font-bold text-primary-text font-mono">{luas.toFixed(2)}</div>
+            <div className="text-[9px] text-black/40">m²</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-3.5 border-b border-black/10">
+        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Volume Kubik</div>
+        <div className="flex gap-1.5 items-end">
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] text-black/40 mb-1">P (m)</div>
+            <input id="vol-kp" type="number" value={kp} onChange={e => setKp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kl')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] text-black/40 mb-1">L (m)</div>
+            <input id="vol-kl" type="number" value={kl} onChange={e => setKl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kt')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] text-black/40 mb-1">T (m)</div>
+            <input id="vol-kt" type="number" value={kt} onChange={e => setKt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rp')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="text-[13px] text-black/30 pb-2.5">=</div>
+          <div className="flex-1 min-w-0 bg-[#f5ffe0] p-2 text-center rounded">
+            <div className="text-[9px] text-black/40">Vol</div>
+            <div className="text-base font-bold text-primary-text font-mono">{kubik.toFixed(3)}</div>
+            <div className="text-[9px] text-black/40">m³</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-3.5">
+        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Keliling & Luas Dinding</div>
+        <div className="flex gap-1.5 mb-2.5">
+          <div className="flex-1">
+            <div className="text-[9px] text-black/40 mb-1">P (m)</div>
+            <input id="vol-rp" type="number" value={rp} onChange={e => setRp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rl')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[9px] text-black/40 mb-1">L (m)</div>
+            <input id="vol-rl" type="number" value={rl} onChange={e => setRl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rt')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[9px] text-black/40 mb-1">T (m)</div>
+            <input id="vol-rt" type="number" value={rt} onChange={e => setRt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-[#f5ffe0] p-2.5 text-center rounded">
+            <div className="text-[9px] text-black/40 mb-0.5">Keliling</div>
+            <div className="text-lg font-bold text-primary-text font-mono">{keliling.toFixed(2)}</div>
+            <div className="text-[9px] text-black/40">m</div>
+          </div>
+          <div className="bg-[#f5ffe0] p-2.5 text-center rounded">
+            <div className="text-[9px] text-black/40 mb-0.5">Luas Dinding</div>
+            <div className="text-lg font-bold text-primary-text font-mono">{luasDinding.toFixed(2)}</div>
+            <div className="text-[9px] text-black/40">m²</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BetonTab() {
+  const [jenis, setJenis] = useState('beton_k175');
+  const [vol, setVol] = useState('2.5');
+
+  const BETON_RASIO: Record<string, any> = {
+    beton_k100: { semen: 1, pasir: 3, kerikil: 5, air: 0.5, nama: 'Beton K-100 (1:3:5)' },
+    beton_k175: { semen: 1, pasir: 2, kerikil: 3, air: 0.5, nama: 'Beton K-175 (1:2:3)' },
+    beton_k225: { semen: 1, pasir: 1.5, kerikil: 2.5, air: 0.4, nama: 'Beton K-225 (1:1.5:2.5)' },
+    beton_k300: { semen: 1, pasir: 1, kerikil: 2, air: 0.4, nama: 'Beton K-300 (1:1:2)' },
+    mortar_12: { semen: 1, pasir: 2, air: 0.5, nama: 'Mortar 1:2' },
+    mortar_13: { semen: 1, pasir: 3, air: 0.5, nama: 'Mortar 1:3' },
+    mortar_15: { semen: 1, pasir: 5, air: 0.6, nama: 'Mortar 1:5' },
+    mortar_16: { semen: 1, pasir: 6, air: 0.7, nama: 'Mortar 1:6' },
+  };
+
+  const r = BETON_RASIO[jenis];
+  const v = parseFloat(vol) || 0;
+  
+  let hasil = null;
+  if (r && v > 0) {
+    const total = r.semen + (r.pasir || 0) + (r.kerikil || 0);
+    const faktorSusut = 1.3;
+    const volBruto = v * faktorSusut;
+    const SEMEN_ZAK_M3 = 0.028;
+    const PASIR_BERAT_M3 = 1400;
+
+    const volSemen = (r.semen / total) * volBruto;
+    const zakSemen = Math.ceil(volSemen / SEMEN_ZAK_M3);
+    const volPasir = (r.pasir / total) * volBruto;
+    const volKerikil = r.kerikil ? (r.kerikil / total) * volBruto : 0;
+    const volAir = v * r.air * 1000;
+
+    hasil = [
+      { label: 'Semen', val: `${zakSemen} zak`, sub: `${zakSemen * 40} kg` },
+      { label: 'Pasir', val: `${volPasir.toFixed(2)} m³`, sub: `${Math.ceil(volPasir * PASIR_BERAT_M3)} kg` },
+      ...(volKerikil ? [{ label: 'Kerikil / Split', val: `${volKerikil.toFixed(2)} m³`, sub: `${Math.ceil(volKerikil * 1600)} kg` }] : []),
+      { label: 'Air', val: `${volAir.toFixed(0)} liter`, sub: '' },
+    ];
+  }
+
+  return (
+    <div className="border border-black/10 rounded-lg overflow-hidden flex flex-col">
+      <div className="p-3.5 border-b border-black/10">
+        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2">Jenis Campuran</div>
+        <select id="beton-jenis" value={jenis} onChange={e => setJenis(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('beton-vol')?.focus(); } }} className="w-full bg-black/5 border border-black/10 rounded px-2 py-2 text-xs outline-none focus:border-primary mb-3">
+          <optgroup label="BETON">
+            <option value="beton_k100">Beton K-100 (1:3:5)</option>
+            <option value="beton_k175">Beton K-175 (1:2:3)</option>
+            <option value="beton_k225">Beton K-225 (1:1.5:2.5)</option>
+            <option value="beton_k300">Beton K-300 (1:1:2)</option>
+          </optgroup>
+          <optgroup label="MORTAR">
+            <option value="mortar_12">Mortar 1:2</option>
+            <option value="mortar_13">Mortar 1:3</option>
+            <option value="mortar_15">Mortar 1:5</option>
+            <option value="mortar_16">Mortar 1:6</option>
+          </optgroup>
+        </select>
+        <div className="text-[9px] text-black/40 mb-1">Volume (m³)</div>
+        <input id="beton-vol" type="number" value={vol} onChange={e => setVol(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="2.5" className="w-full bg-black/5 border border-black/10 rounded px-2 py-2 text-xs outline-none focus:border-primary" />
+      </div>
+      
+      {r && (
+        <div className="px-3.5 py-2.5 text-[10px] text-black/40">
+          <b>{r.nama}</b><br/>
+          Rasio: {r.semen} Semen : {r.pasir} Pasir{r.kerikil ? ` : ${r.kerikil} Kerikil` : ''}
+        </div>
+      )}
+
+      {hasil && (
+        <div>
+          <div className="px-3.5 py-2 bg-[#aaee0014] border-y border-black/5">
+            <div className="text-[9px] font-semibold text-black/40 uppercase tracking-[1px]">Kebutuhan Material</div>
+          </div>
+          {hasil.map((row, i) => (
+            <div key={i} className={`flex justify-between items-center px-3.5 py-2.5 ${i < hasil.length - 1 ? 'border-b border-black/5' : ''}`}>
+              <span className="text-xs text-[#1a1a1a]">{row.label}</span>
+              <div className="text-right">
+                <div className="text-sm font-bold text-primary-text font-mono">{row.val}</div>
+                {row.sub && <div className="text-[9px] text-black/40">{row.sub}</div>}
+              </div>
+            </div>
+          ))}
+          <div className="px-3.5 py-2 text-[9px] text-black/35 border-t border-black/5">
+            *Faktor susut 30% sudah termasuk. Volume bersih: {v.toFixed(2)} m³
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
