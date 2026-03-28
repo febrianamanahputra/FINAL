@@ -13,7 +13,7 @@ interface ToolsPageProps {
   onBack: () => void;
 }
 
-type TabType = 'action' | 'volume' | 'beton';
+type TabType = 'action' | 'volume' | 'beton' | 'iron';
 
 export default function ToolsPage({ state, locData, updateLocData, onBack }: ToolsPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('action');
@@ -31,7 +31,8 @@ export default function ToolsPage({ state, locData, updateLocData, onBack }: Too
         {[
           { id: 'action', label: 'Action Plan' },
           { id: 'volume', label: 'Volume' },
-          { id: 'beton', label: 'Beton' }
+          { id: 'beton', label: 'Beton' },
+          { id: 'iron', label: 'Iron Calc' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -51,6 +52,7 @@ export default function ToolsPage({ state, locData, updateLocData, onBack }: Too
         {activeTab === 'action' && <ActionPlanTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} />}
         {activeTab === 'volume' && <VolumeTab />}
         {activeTab === 'beton' && <BetonTab />}
+        {activeTab === 'iron' && <IronCalcTab />}
       </div>
     </div>
   );
@@ -622,6 +624,272 @@ function BetonTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function IronCalcTab() {
+  const [tipe, setTipe] = useState('Balok');
+  const [b, setB] = useState('200'); // mm
+  const [h, setH] = useState('300'); // mm
+  const [L, setL] = useState('4'); // m
+  const [cover, setCover] = useState('25'); // mm
+  const [mutuBeton, setMutuBeton] = useState('fc 20');
+
+  const [topCount, setTopCount] = useState('3');
+  const [topDia, setTopDia] = useState('12');
+  
+  const [waistCount, setWaistCount] = useState('2');
+  const [waistDia, setWaistDia] = useState('10');
+  
+  const [botCount, setBotCount] = useState('3');
+  const [botDia, setBotDia] = useState('12');
+
+  const [begelDia, setBegelDia] = useState('8');
+  const [jarakTumpuan, setJarakTumpuan] = useState('100'); // mm
+  const [jarakLapangan, setJarakLapangan] = useState('150'); // mm
+
+  // Calculations
+  const b_mm = parseFloat(b) || 0;
+  const h_mm = parseFloat(h) || 0;
+  const L_m = parseFloat(L) || 0;
+  const c_mm = parseFloat(cover) || 0;
+
+  const tCount = parseInt(topCount) || 0;
+  const tDia = parseFloat(topDia) || 0;
+  const wCount = parseInt(waistCount) || 0;
+  const wDia = parseFloat(waistDia) || 0;
+  const bCount = parseInt(botCount) || 0;
+  const bDia = parseFloat(botDia) || 0;
+  const bgDia = parseFloat(begelDia) || 0;
+  const jTumpuan = parseFloat(jarakTumpuan) || 0;
+  const jLapangan = parseFloat(jarakLapangan) || 0;
+
+  const L_mm = L_m * 1000;
+  const lenTumpuan = L_mm / 2;
+  const lenLapangan = L_mm / 2;
+  
+  const numBegelTumpuan = jTumpuan > 0 ? Math.ceil(lenTumpuan / jTumpuan) : 0;
+  const numBegelLapangan = jLapangan > 0 ? Math.ceil(lenLapangan / jLapangan) : 0;
+  const totalBegel = numBegelTumpuan + numBegelLapangan;
+
+  const begelWidth = Math.max(0, b_mm - 2 * c_mm);
+  const begelHeight = Math.max(0, h_mm - 2 * c_mm);
+  const hookLength = Math.max(6 * bgDia, 50);
+  const lenOneBegel = 2 * begelWidth + 2 * begelHeight + 2 * hookLength;
+  const totalLenBegel = (totalBegel * lenOneBegel) / 1000;
+
+  const anchorage = 0.4;
+  const lenTop = tCount * (L_m + anchorage);
+  const lenWaist = wCount * L_m;
+  const lenBot = bCount * (L_m + anchorage);
+
+  const getWeight = (dia: number, len: number) => (0.006165 * dia * dia) * len;
+
+  const wTop = getWeight(tDia, lenTop);
+  const wWaist = getWeight(wDia, lenWaist);
+  const wBot = getWeight(bDia, lenBot);
+  const wBegel = getWeight(bgDia, totalLenBegel);
+
+  const totalWeight = wTop + wWaist + wBot + wBegel;
+
+  const rebarSummary: Record<string, { len: number, weight: number }> = {};
+  const addRebar = (dia: number, len: number, weight: number) => {
+    if (dia === 0 || len === 0) return;
+    const key = `D${dia}`;
+    if (!rebarSummary[key]) rebarSummary[key] = { len: 0, weight: 0 };
+    rebarSummary[key].len += len;
+    rebarSummary[key].weight += weight;
+  };
+
+  addRebar(tDia, lenTop, wTop);
+  addRebar(wDia, lenWaist, wWaist);
+  addRebar(bDia, lenBot, wBot);
+  addRebar(bgDia, totalLenBegel, wBegel);
+
+  const svgW = 240;
+  const svgH = 240;
+  const margin = 30;
+  const drawW = svgW - 2 * margin;
+  const drawH = svgH - 2 * margin;
+  
+  const maxDim = Math.max(b_mm, h_mm);
+  const scale = maxDim > 0 ? Math.min(drawW / b_mm, drawH / h_mm) : 1;
+  
+  const rectW = b_mm * scale;
+  const rectH = h_mm * scale;
+  const startX = (svgW - rectW) / 2;
+  const startY = (svgH - rectH) / 2;
+  
+  const innerX = startX + c_mm * scale;
+  const innerY = startY + c_mm * scale;
+  const innerW = Math.max(0, rectW - 2 * c_mm * scale);
+  const innerH = Math.max(0, rectH - 2 * c_mm * scale);
+
+  return (
+    <div className="flex flex-col gap-4 pb-10">
+      {/* Inputs Section */}
+      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Tipe Elemen</label>
+            <select value={tipe} onChange={e => setTipe(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary">
+              <option>Slof</option>
+              <option>Kolom</option>
+              <option>Balok</option>
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Mutu Beton</label>
+            <input value={mutuBeton} onChange={e => setMutuBeton(e.target.value)} placeholder="fc 20" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Lebar (b) mm</label>
+            <input type="number" value={b} onChange={e => setB(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Tinggi (h) mm</label>
+            <input type="number" value={h} onChange={e => setH(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Panjang (L) m</label>
+            <input type="number" value={L} onChange={e => setL(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Selimut Beton (mm)</label>
+            <input type="number" value={cover} onChange={e => setCover(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tulangan Utama */}
+      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
+        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px]">Tulangan Utama</div>
+        
+        <div className="grid grid-cols-3 gap-2 items-end">
+          <div className="text-xs font-medium text-black/60 pb-1.5">Atas</div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
+            <input type="number" value={topCount} onChange={e => setTopCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
+            <input type="number" value={topDia} onChange={e => setTopDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 items-end">
+          <div className="text-xs font-medium text-black/60 pb-1.5">Pinggang</div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
+            <input type="number" value={waistCount} onChange={e => setWaistCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
+            <input type="number" value={waistDia} onChange={e => setWaistDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 items-end">
+          <div className="text-xs font-medium text-black/60 pb-1.5">Bawah</div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
+            <input type="number" value={botCount} onChange={e => setBotCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
+            <input type="number" value={botDia} onChange={e => setBotDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+      </div>
+
+      {/* Begel */}
+      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
+        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px]">Begel / Sengkang</div>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
+            <input type="number" value={begelDia} onChange={e => setBegelDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Jrk Tumpuan (mm)</label>
+            <input type="number" value={jarakTumpuan} onChange={e => setJarakTumpuan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label className="text-[9px] text-black/40 mb-1 block">Jrk Lapangan (mm)</label>
+            <input type="number" value={jarakLapangan} onChange={e => setJarakLapangan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          </div>
+        </div>
+        <div className="text-[9px] text-black/40 mt-1">
+          *Tumpuan dihitung 1/4 bentang di kedua ujung (total 1/2 L). Lapangan di tengah (1/2 L).
+        </div>
+      </div>
+
+      {/* Sketch */}
+      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col items-center bg-black/[0.02]">
+        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px] mb-4 w-full text-left">Sketsa Penampang</div>
+        <svg width={svgW} height={svgH} className="bg-white border border-black/10 rounded shadow-sm">
+          {/* Concrete */}
+          <rect x={startX} y={startY} width={rectW} height={rectH} fill="#e5e7eb" stroke="#9ca3af" strokeWidth="2" />
+          {/* Stirrup */}
+          <rect x={innerX} y={innerY} width={innerW} height={innerH} fill="none" stroke="#3b82f6" strokeWidth="3" rx="4" />
+          {/* Top Rebars */}
+          {Array.from({ length: tCount }).map((_, i) => {
+            const cx = tCount === 1 ? innerX + innerW/2 : innerX + (i * innerW / (tCount - 1));
+            return <circle key={`t-${i}`} cx={cx} cy={innerY} r={Math.max(3, tDia/2 * scale)} fill="#ef4444" />
+          })}
+          {/* Bottom Rebars */}
+          {Array.from({ length: bCount }).map((_, i) => {
+            const cx = bCount === 1 ? innerX + innerW/2 : innerX + (i * innerW / (bCount - 1));
+            return <circle key={`b-${i}`} cx={cx} cy={innerY + innerH} r={Math.max(3, bDia/2 * scale)} fill="#ef4444" />
+          })}
+          {/* Waist Rebars */}
+          {Array.from({ length: wCount }).map((_, i) => {
+            const pairs = Math.floor(wCount / 2);
+            const isLeft = i % 2 === 0;
+            const pairIdx = Math.floor(i / 2);
+            const cy = pairs === 1 ? innerY + innerH/2 : innerY + ((pairIdx + 1) * innerH / (pairs + 1));
+            const cx = isLeft ? innerX : innerX + innerW;
+            return <circle key={`w-${i}`} cx={cx} cy={cy} r={Math.max(3, wDia/2 * scale)} fill="#f59e0b" />
+          })}
+          
+          {/* Dimensions */}
+          <text x={startX + rectW/2} y={startY - 8} fontSize="10" textAnchor="middle" fill="#6b7280">{b_mm} mm</text>
+          <text x={startX - 8} y={startY + rectH/2} fontSize="10" textAnchor="middle" fill="#6b7280" transform={`rotate(-90, ${startX - 8}, ${startY + rectH/2})`}>{h_mm} mm</text>
+        </svg>
+      </div>
+
+      {/* Results */}
+      <div className="border border-black/10 rounded-lg overflow-hidden">
+        <div className="bg-[#f5ffe0] p-3.5 border-b border-black/10">
+          <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px] mb-1">Total Kebutuhan Besi</div>
+          <div className="text-2xl font-bold text-primary-text font-mono">{totalWeight.toFixed(2)} <span className="text-sm font-normal">kg</span></div>
+        </div>
+        <div className="p-3.5 flex flex-col gap-2">
+          {Object.entries(rebarSummary).map(([dia, data]) => {
+            const bars = Math.ceil(data.len / 12);
+            return (
+              <div key={dia} className="flex justify-between items-center border-b border-black/5 pb-2 last:border-0 last:pb-0">
+                <div className="font-bold text-sm">{dia}</div>
+                <div className="text-right">
+                  <div className="text-xs font-bold text-[#1a1a1a]">{bars} batang <span className="text-[10px] font-normal text-black/50">(12m)</span></div>
+                  <div className="text-[10px] text-black/50">{data.weight.toFixed(2)} kg • {data.len.toFixed(2)} m</div>
+                </div>
+              </div>
+            );
+          })}
+          <div className="mt-2 text-[9px] text-black/40">
+            *Estimasi berat menggunakan rumus 0.006165 × d². Panjang batang standar 12m. Sudah termasuk estimasi panjang kait/jangkar.
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
