@@ -52,7 +52,7 @@ export default function ToolsPage({ state, locData, updateLocData, onBack }: Too
         {activeTab === 'action' && <ActionPlanTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} />}
         {activeTab === 'volume' && <VolumeTab />}
         {activeTab === 'beton' && <BetonTab />}
-        {activeTab === 'iron' && <IronCalcTab />}
+        {activeTab === 'iron' && <IronCalcTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} />}
       </div>
     </div>
   );
@@ -628,7 +628,11 @@ function BetonTab() {
   );
 }
 
-function IronCalcTab() {
+import { LocData } from '../../types';
+import { Trash2 } from 'lucide-react';
+import Overlay from '../Overlay';
+
+function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, updateLocData: any, locId: string | null }) {
   const [tipe, setTipe] = useState('Balok');
   const [b, setB] = useState('200'); // mm
   const [h, setH] = useState('300'); // mm
@@ -638,22 +642,31 @@ function IronCalcTab() {
 
   const [top1Count, setTop1Count] = useState('3');
   const [top1Dia, setTop1Dia] = useState('12');
+  const [top1Type, setTop1Type] = useState('D');
   const [top2Count, setTop2Count] = useState('');
   const [top2Dia, setTop2Dia] = useState('10');
+  const [top2Type, setTop2Type] = useState('D');
   
   const [waist1Count, setWaist1Count] = useState('2');
   const [waist1Dia, setWaist1Dia] = useState('10');
+  const [waist1Type, setWaist1Type] = useState('D');
   const [waist2Count, setWaist2Count] = useState('');
   const [waist2Dia, setWaist2Dia] = useState('8');
+  const [waist2Type, setWaist2Type] = useState('D');
   
   const [bot1Count, setBot1Count] = useState('3');
   const [bot1Dia, setBot1Dia] = useState('12');
+  const [bot1Type, setBot1Type] = useState('D');
   const [bot2Count, setBot2Count] = useState('');
   const [bot2Dia, setBot2Dia] = useState('10');
+  const [bot2Type, setBot2Type] = useState('D');
 
   const [begelDia, setBegelDia] = useState('8');
+  const [begelType, setBegelType] = useState('Ø');
   const [jarakTumpuan, setJarakTumpuan] = useState('100'); // mm
   const [jarakLapangan, setJarakLapangan] = useState('150'); // mm
+
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Calculations
   const b_mm = parseFloat(b) || 0;
@@ -715,21 +728,21 @@ function IronCalcTab() {
   const totalWeight = wTop1 + wTop2 + wWaist1 + wWaist2 + wBot1 + wBot2 + wBegel;
 
   const rebarSummary: Record<string, { len: number, weight: number }> = {};
-  const addRebar = (dia: number, len: number, weight: number) => {
+  const addRebar = (type: string, dia: number, len: number, weight: number) => {
     if (dia === 0 || len === 0) return;
-    const key = `D${dia}`;
+    const key = `${type}${dia}`;
     if (!rebarSummary[key]) rebarSummary[key] = { len: 0, weight: 0 };
     rebarSummary[key].len += len;
     rebarSummary[key].weight += weight;
   };
 
-  addRebar(t1D, lenTop1, wTop1);
-  addRebar(t2D, lenTop2, wTop2);
-  addRebar(w1D, lenWaist1, wWaist1);
-  addRebar(w2D, lenWaist2, wWaist2);
-  addRebar(b1D, lenBot1, wBot1);
-  addRebar(b2D, lenBot2, wBot2);
-  addRebar(bgDia, totalLenBegel, wBegel);
+  addRebar(top1Type, t1D, lenTop1, wTop1);
+  addRebar(top2Type, t2D, lenTop2, wTop2);
+  addRebar(waist1Type, w1D, lenWaist1, wWaist1);
+  addRebar(waist2Type, w2D, lenWaist2, wWaist2);
+  addRebar(bot1Type, b1D, lenBot1, wBot1);
+  addRebar(bot2Type, b2D, lenBot2, wBot2);
+  addRebar(begelType, bgDia, totalLenBegel, wBegel);
 
   const svgW = 240;
   const svgH = 240;
@@ -750,8 +763,66 @@ function IronCalcTab() {
   const innerW = Math.max(0, rectW - 2 * c_mm * scale);
   const innerH = Math.max(0, rectH - 2 * c_mm * scale);
 
+  const handleSave = () => {
+    const name = prompt("Masukkan nama perhitungan (misal: Balok B1 Lantai 2):");
+    if (!name) return;
+    const calcData = {
+      id: Date.now().toString(),
+      name,
+      date: new Date().toISOString(),
+      form: {
+        tipe, b, h, L, cover, mutuBeton,
+        top1Count, top1Dia, top1Type, top2Count, top2Dia, top2Type,
+        waist1Count, waist1Dia, waist1Type, waist2Count, waist2Dia, waist2Type,
+        bot1Count, bot1Dia, bot1Type, bot2Count, bot2Dia, bot2Type,
+        begelDia, begelType, jarakTumpuan, jarakLapangan
+      },
+      totalWeight
+    };
+    if (locId) {
+      updateLocData(locId, (prev: any) => ({
+        ...prev,
+        ironCalcs: [calcData, ...(prev.ironCalcs || [])]
+      }));
+      alert("Perhitungan tersimpan!");
+    }
+  };
+
+  const handleLoad = (calc: any) => {
+    const f = calc.form;
+    setTipe(f.tipe); setB(f.b); setH(f.h); setL(f.L); setCover(f.cover); setMutuBeton(f.mutuBeton);
+    setTop1Count(f.top1Count); setTop1Dia(f.top1Dia); setTop1Type(f.top1Type || 'D');
+    setTop2Count(f.top2Count); setTop2Dia(f.top2Dia); setTop2Type(f.top2Type || 'D');
+    setWaist1Count(f.waist1Count); setWaist1Dia(f.waist1Dia); setWaist1Type(f.waist1Type || 'D');
+    setWaist2Count(f.waist2Count); setWaist2Dia(f.waist2Dia); setWaist2Type(f.waist2Type || 'D');
+    setBot1Count(f.bot1Count); setBot1Dia(f.bot1Dia); setBot1Type(f.bot1Type || 'D');
+    setBot2Count(f.bot2Count); setBot2Dia(f.bot2Dia); setBot2Type(f.bot2Type || 'D');
+    setBegelDia(f.begelDia); setBegelType(f.begelType || 'Ø'); setJarakTumpuan(f.jarakTumpuan); setJarakLapangan(f.jarakLapangan);
+    setIsHistoryOpen(false);
+  };
+
+  const handleDeleteHistory = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Hapus riwayat ini?")) {
+      if (locId) {
+        updateLocData(locId, (prev: any) => ({
+          ...prev,
+          ironCalcs: (prev.ironCalcs || []).filter((c: any) => c.id !== id)
+        }));
+      }
+    }
+  };
+
+  const historyList = locData?.ironCalcs || [];
+
   return (
     <div className="flex flex-col gap-4 pb-10">
+      {/* Actions */}
+      <div className="flex gap-2">
+        <button onClick={handleSave} className="flex-1 bg-primary/20 text-primary-dark font-medium text-xs py-2 rounded-lg hover:bg-primary/30 transition-colors">Simpan Perhitungan</button>
+        <button onClick={() => setIsHistoryOpen(true)} className="flex-1 bg-black/5 text-[#1a1a1a] font-medium text-xs py-2 rounded-lg hover:bg-black/10 transition-colors">Riwayat ({historyList.length})</button>
+      </div>
+
       {/* Inputs Section */}
       <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
         <div className="flex gap-2">
@@ -802,13 +873,13 @@ function IronCalcTab() {
           <div className="flex items-center gap-2">
             <input type="number" value={top1Count} onChange={e => setTop1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setTop1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{top1Type}</button>
             <input type="number" value={top1Dia} onChange={e => setTop1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
             <input type="number" value={top2Count} onChange={e => setTop2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setTop2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{top2Type}</button>
             <input type="number" value={top2Dia} onChange={e => setTop2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
@@ -819,13 +890,13 @@ function IronCalcTab() {
           <div className="flex items-center gap-2">
             <input type="number" value={waist1Count} onChange={e => setWaist1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setWaist1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{waist1Type}</button>
             <input type="number" value={waist1Dia} onChange={e => setWaist1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
             <input type="number" value={waist2Count} onChange={e => setWaist2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setWaist2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{waist2Type}</button>
             <input type="number" value={waist2Dia} onChange={e => setWaist2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
@@ -836,13 +907,13 @@ function IronCalcTab() {
           <div className="flex items-center gap-2">
             <input type="number" value={bot1Count} onChange={e => setBot1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setBot1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{bot1Type}</button>
             <input type="number" value={bot1Dia} onChange={e => setBot1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
             <input type="number" value={bot2Count} onChange={e => setBot2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
             <span className="text-[10px] text-black/40">btg</span>
-            <span className="font-bold text-black/60 ml-2">D</span>
+            <button onClick={() => setBot2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{bot2Type}</button>
             <input type="number" value={bot2Dia} onChange={e => setBot2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
@@ -854,15 +925,18 @@ function IronCalcTab() {
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
-            <input type="number" value={begelDia} onChange={e => setBegelDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="flex items-center gap-1">
+              <button onClick={() => setBegelType(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{begelType}</button>
+              <input type="number" value={begelDia} onChange={e => setBegelDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            </div>
           </div>
           <div>
             <label className="text-[9px] text-black/40 mb-1 block">Jrk Tumpuan (mm)</label>
-            <input type="number" value={jarakTumpuan} onChange={e => setJarakTumpuan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <input type="number" value={jarakTumpuan} onChange={e => setJarakTumpuan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
           </div>
           <div>
             <label className="text-[9px] text-black/40 mb-1 block">Jrk Lapangan (mm)</label>
-            <input type="number" value={jarakLapangan} onChange={e => setJarakLapangan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <input type="number" value={jarakLapangan} onChange={e => setJarakLapangan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
           </div>
         </div>
         <div className="text-[9px] text-black/40 mt-1">
@@ -945,6 +1019,27 @@ function IronCalcTab() {
           </div>
         </div>
       </div>
+
+      <Overlay isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} title="Riwayat Perhitungan">
+        <div className="flex flex-col gap-2 pb-6">
+          {historyList.length === 0 ? (
+            <div className="text-xs text-black/40 text-center py-6">Belum ada riwayat tersimpan.</div>
+          ) : (
+            historyList.map((calc: any) => (
+              <div key={calc.id} onClick={() => handleLoad(calc)} className="bg-white border border-black/10 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-black/5">
+                <div>
+                  <div className="text-xs font-bold text-[#1a1a1a]">{calc.name}</div>
+                  <div className="text-[10px] text-black/40 mt-0.5">{new Date(calc.date).toLocaleDateString('id-ID')} • {calc.form.tipe}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-bold text-primary-dark">{calc.totalWeight.toFixed(1)} kg</div>
+                  <button onClick={(e) => handleDeleteHistory(calc.id, e)} className="text-black/20 hover:text-red-500 p-1"><Trash2 size={14} /></button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Overlay>
 
     </div>
   );

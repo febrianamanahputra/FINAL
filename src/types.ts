@@ -29,6 +29,7 @@ export interface LocData {
   danaDrafts?: Record<number, any>;
   pendingRequests?: any[];
   stock?: Record<string, any>;
+  ironCalcs?: any[];
 }
 
 export interface AppState {
