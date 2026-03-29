@@ -636,14 +636,20 @@ function IronCalcTab() {
   const [cover, setCover] = useState('25'); // mm
   const [mutuBeton, setMutuBeton] = useState('fc 20');
 
-  const [topCount, setTopCount] = useState('3');
-  const [topDia, setTopDia] = useState('12');
+  const [top1Count, setTop1Count] = useState('3');
+  const [top1Dia, setTop1Dia] = useState('12');
+  const [top2Count, setTop2Count] = useState('');
+  const [top2Dia, setTop2Dia] = useState('10');
   
-  const [waistCount, setWaistCount] = useState('2');
-  const [waistDia, setWaistDia] = useState('10');
+  const [waist1Count, setWaist1Count] = useState('2');
+  const [waist1Dia, setWaist1Dia] = useState('10');
+  const [waist2Count, setWaist2Count] = useState('');
+  const [waist2Dia, setWaist2Dia] = useState('8');
   
-  const [botCount, setBotCount] = useState('3');
-  const [botDia, setBotDia] = useState('12');
+  const [bot1Count, setBot1Count] = useState('3');
+  const [bot1Dia, setBot1Dia] = useState('12');
+  const [bot2Count, setBot2Count] = useState('');
+  const [bot2Dia, setBot2Dia] = useState('10');
 
   const [begelDia, setBegelDia] = useState('8');
   const [jarakTumpuan, setJarakTumpuan] = useState('100'); // mm
@@ -655,12 +661,21 @@ function IronCalcTab() {
   const L_m = parseFloat(L) || 0;
   const c_mm = parseFloat(cover) || 0;
 
-  const tCount = parseInt(topCount) || 0;
-  const tDia = parseFloat(topDia) || 0;
-  const wCount = parseInt(waistCount) || 0;
-  const wDia = parseFloat(waistDia) || 0;
-  const bCount = parseInt(botCount) || 0;
-  const bDia = parseFloat(botDia) || 0;
+  const t1C = parseInt(top1Count) || 0;
+  const t1D = parseFloat(top1Dia) || 0;
+  const t2C = parseInt(top2Count) || 0;
+  const t2D = parseFloat(top2Dia) || 0;
+  
+  const w1C = parseInt(waist1Count) || 0;
+  const w1D = parseFloat(waist1Dia) || 0;
+  const w2C = parseInt(waist2Count) || 0;
+  const w2D = parseFloat(waist2Dia) || 0;
+  
+  const b1C = parseInt(bot1Count) || 0;
+  const b1D = parseFloat(bot1Dia) || 0;
+  const b2C = parseInt(bot2Count) || 0;
+  const b2D = parseFloat(bot2Dia) || 0;
+  
   const bgDia = parseFloat(begelDia) || 0;
   const jTumpuan = parseFloat(jarakTumpuan) || 0;
   const jLapangan = parseFloat(jarakLapangan) || 0;
@@ -680,18 +695,24 @@ function IronCalcTab() {
   const totalLenBegel = (totalBegel * lenOneBegel) / 1000;
 
   const anchorage = 0.4;
-  const lenTop = tCount * (L_m + anchorage);
-  const lenWaist = wCount * L_m;
-  const lenBot = bCount * (L_m + anchorage);
+  const lenTop1 = t1C * (L_m + anchorage);
+  const lenTop2 = t2C * (L_m + anchorage);
+  const lenWaist1 = w1C * L_m;
+  const lenWaist2 = w2C * L_m;
+  const lenBot1 = b1C * (L_m + anchorage);
+  const lenBot2 = b2C * (L_m + anchorage);
 
   const getWeight = (dia: number, len: number) => (0.006165 * dia * dia) * len;
 
-  const wTop = getWeight(tDia, lenTop);
-  const wWaist = getWeight(wDia, lenWaist);
-  const wBot = getWeight(bDia, lenBot);
+  const wTop1 = getWeight(t1D, lenTop1);
+  const wTop2 = getWeight(t2D, lenTop2);
+  const wWaist1 = getWeight(w1D, lenWaist1);
+  const wWaist2 = getWeight(w2D, lenWaist2);
+  const wBot1 = getWeight(b1D, lenBot1);
+  const wBot2 = getWeight(b2D, lenBot2);
   const wBegel = getWeight(bgDia, totalLenBegel);
 
-  const totalWeight = wTop + wWaist + wBot + wBegel;
+  const totalWeight = wTop1 + wTop2 + wWaist1 + wWaist2 + wBot1 + wBot2 + wBegel;
 
   const rebarSummary: Record<string, { len: number, weight: number }> = {};
   const addRebar = (dia: number, len: number, weight: number) => {
@@ -702,9 +723,12 @@ function IronCalcTab() {
     rebarSummary[key].weight += weight;
   };
 
-  addRebar(tDia, lenTop, wTop);
-  addRebar(wDia, lenWaist, wWaist);
-  addRebar(bDia, lenBot, wBot);
+  addRebar(t1D, lenTop1, wTop1);
+  addRebar(t2D, lenTop2, wTop2);
+  addRebar(w1D, lenWaist1, wWaist1);
+  addRebar(w2D, lenWaist2, wWaist2);
+  addRebar(b1D, lenBot1, wBot1);
+  addRebar(b2D, lenBot2, wBot2);
   addRebar(bgDia, totalLenBegel, wBegel);
 
   const svgW = 240;
@@ -769,42 +793,57 @@ function IronCalcTab() {
       </div>
 
       {/* Tulangan Utama */}
-      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
+      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-4">
         <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px]">Tulangan Utama</div>
         
-        <div className="grid grid-cols-3 gap-2 items-end">
-          <div className="text-xs font-medium text-black/60 pb-1.5">Atas</div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
-            <input type="number" value={topCount} onChange={e => setTopCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+        {/* Atas */}
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-black/60">Atas</div>
+          <div className="flex items-center gap-2">
+            <input type="number" value={top1Count} onChange={e => setTop1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={top1Dia} onChange={e => setTop1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
-            <input type="number" value={topDia} onChange={e => setTopDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 items-end">
-          <div className="text-xs font-medium text-black/60 pb-1.5">Pinggang</div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
-            <input type="number" value={waistCount} onChange={e => setWaistCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
-          </div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
-            <input type="number" value={waistDia} onChange={e => setWaistDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          <div className="flex items-center gap-2">
+            <input type="number" value={top2Count} onChange={e => setTop2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={top2Dia} onChange={e => setTop2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 items-end">
-          <div className="text-xs font-medium text-black/60 pb-1.5">Bawah</div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Jumlah</label>
-            <input type="number" value={botCount} onChange={e => setBotCount(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+        {/* Pinggang */}
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-black/60">Pinggang</div>
+          <div className="flex items-center gap-2">
+            <input type="number" value={waist1Count} onChange={e => setWaist1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={waist1Dia} onChange={e => setWaist1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
-          <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
-            <input type="number" value={botDia} onChange={e => setBotDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+          <div className="flex items-center gap-2">
+            <input type="number" value={waist2Count} onChange={e => setWaist2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={waist2Dia} onChange={e => setWaist2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
+          </div>
+        </div>
+
+        {/* Bawah */}
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-black/60">Bawah</div>
+          <div className="flex items-center gap-2">
+            <input type="number" value={bot1Count} onChange={e => setBot1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={bot1Dia} onChange={e => setBot1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="number" value={bot2Count} onChange={e => setBot2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-black/40">btg</span>
+            <span className="font-bold text-black/60 ml-2">D</span>
+            <input type="number" value={bot2Dia} onChange={e => setBot2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
       </div>
@@ -840,24 +879,41 @@ function IronCalcTab() {
           {/* Stirrup */}
           <rect x={innerX} y={innerY} width={innerW} height={innerH} fill="none" stroke="#3b82f6" strokeWidth="3" rx="4" />
           {/* Top Rebars */}
-          {Array.from({ length: tCount }).map((_, i) => {
-            const cx = tCount === 1 ? innerX + innerW/2 : innerX + (i * innerW / (tCount - 1));
-            return <circle key={`t-${i}`} cx={cx} cy={innerY} r={Math.max(3, tDia/2 * scale)} fill="#ef4444" />
-          })}
+          {(() => {
+            const topRebars = [...Array(t1C).fill(t1D), ...Array(t2C).fill(t2D)];
+            return topRebars.map((dia, i) => {
+              const cx = topRebars.length === 1 ? innerX + innerW/2 : innerX + (i * innerW / (topRebars.length - 1));
+              return <circle key={`t-${i}`} cx={cx} cy={innerY} r={Math.max(3, dia/2 * scale)} fill="#ef4444" />
+            });
+          })()}
           {/* Bottom Rebars */}
-          {Array.from({ length: bCount }).map((_, i) => {
-            const cx = bCount === 1 ? innerX + innerW/2 : innerX + (i * innerW / (bCount - 1));
-            return <circle key={`b-${i}`} cx={cx} cy={innerY + innerH} r={Math.max(3, bDia/2 * scale)} fill="#ef4444" />
-          })}
+          {(() => {
+            const botRebars = [...Array(b1C).fill(b1D), ...Array(b2C).fill(b2D)];
+            return botRebars.map((dia, i) => {
+              const cx = botRebars.length === 1 ? innerX + innerW/2 : innerX + (i * innerW / (botRebars.length - 1));
+              return <circle key={`b-${i}`} cx={cx} cy={innerY + innerH} r={Math.max(3, dia/2 * scale)} fill="#ef4444" />
+            });
+          })()}
           {/* Waist Rebars */}
-          {Array.from({ length: wCount }).map((_, i) => {
-            const pairs = Math.floor(wCount / 2);
-            const isLeft = i % 2 === 0;
-            const pairIdx = Math.floor(i / 2);
-            const cy = pairs === 1 ? innerY + innerH/2 : innerY + ((pairIdx + 1) * innerH / (pairs + 1));
-            const cx = isLeft ? innerX : innerX + innerW;
-            return <circle key={`w-${i}`} cx={cx} cy={cy} r={Math.max(3, wDia/2 * scale)} fill="#f59e0b" />
-          })}
+          {(() => {
+            const waistRebars = [...Array(w1C).fill(w1D), ...Array(w2C).fill(w2D)];
+            const wCountTotal = waistRebars.length;
+            if (wCountTotal === 0) return null;
+            
+            return waistRebars.map((dia, i) => {
+              const pairs = Math.floor(wCountTotal / 2);
+              const isLeft = i % 2 === 0;
+              const pairIdx = Math.floor(i / 2);
+              
+              if (wCountTotal % 2 !== 0 && i === wCountTotal - 1) {
+                 return <circle key={`w-mid`} cx={innerX + innerW/2} cy={innerY + innerH/2} r={Math.max(3, dia/2 * scale)} fill="#f59e0b" />
+              }
+
+              const cy = pairs === 1 ? innerY + innerH/2 : innerY + ((pairIdx + 1) * innerH / (pairs + 1));
+              const cx = isLeft ? innerX : innerX + innerW;
+              return <circle key={`w-${i}`} cx={cx} cy={cy} r={Math.max(3, dia/2 * scale)} fill="#f59e0b" />
+            });
+          })()}
           
           {/* Dimensions */}
           <text x={startX + rectW/2} y={startY - 8} fontSize="10" textAnchor="middle" fill="#6b7280">{b_mm} mm</text>
