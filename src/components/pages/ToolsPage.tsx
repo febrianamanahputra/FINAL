@@ -744,6 +744,8 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
   addRebar(bot2Type, b2D, lenBot2, wBot2);
   addRebar(begelType, bgDia, totalLenBegel, wBegel);
 
+  const totalBars = Object.values(rebarSummary).reduce((sum, data) => sum + Math.ceil(data.len / 12), 0);
+
   const svgW = 240;
   const svgH = 240;
   const margin = 30;
@@ -777,7 +779,8 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
         bot1Count, bot1Dia, bot1Type, bot2Count, bot2Dia, bot2Type,
         begelDia, begelType, jarakTumpuan, jarakLapangan
       },
-      totalWeight
+      totalWeight,
+      totalBars
     };
     if (locId) {
       updateLocData(locId, (prev: any) => ({
@@ -1032,7 +1035,10 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
                   <div className="text-[10px] text-black/40 mt-0.5">{new Date(calc.date).toLocaleDateString('id-ID')} • {calc.form.tipe}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-xs font-bold text-primary-dark">{calc.totalWeight.toFixed(1)} kg</div>
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-primary-dark">{calc.totalBars ? `${calc.totalBars} btg` : '-'}</div>
+                    <div className="text-[10px] text-black/40">{calc.totalWeight.toFixed(1)} kg</div>
+                  </div>
                   <button onClick={(e) => handleDeleteHistory(calc.id, e)} className="text-black/20 hover:text-red-500 p-1"><Trash2 size={14} /></button>
                 </div>
               </div>
