@@ -49,8 +49,8 @@ export default function MaterialPage({ state, locData, updateLocData, onBack }: 
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 max-w-[480px] mx-auto w-full">
-        {activeTab === 'request' && <RequestTab locData={locData} locName={locName} />}
-        {activeTab === 'tracking' && <TrackingTab locData={locData} />}
+        {activeTab === 'request' && <RequestTab locData={locData} locName={locName} updateLocData={updateLocData} locId={state.activeLoc} />}
+        {activeTab === 'tracking' && <TrackingTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} />}
         {activeTab === 'stock' && <StockTab locData={locData} updateLocData={updateLocData} locId={state.activeLoc} locName={locName} />}
         {activeTab === 'shop' && <ShopTab locName={locName} />}
       </div>
@@ -58,7 +58,7 @@ export default function MaterialPage({ state, locData, updateLocData, onBack }: 
   );
 }
 
-function RequestTab({ locData, locName }: { locData: LocData, locName: string }) {
+function RequestTab({ locData, locName, updateLocData, locId }: { locData: LocData, locName: string, updateLocData: any, locId: string | null }) {
   const [tglReq, setTglReq] = useState(new Date().toISOString().split('T')[0]);
   const [tglPerlu, setTglPerlu] = useState('');
   const [items, setItems] = useState([{ id: 'mi_1', nama: '', jumlah: '', satuan: '' }]);
@@ -80,11 +80,29 @@ function RequestTab({ locData, locName }: { locData: LocData, locName: string })
     if (!filled.length) return alert('Isi minimal satu item material.');
     if (!tglPerlu) return alert('Isi Tanggal Diperlukan.');
 
+    if (locId) {
+      const newRequest = {
+        id: `req_${Date.now()}`,
+        tglReq,
+        tglPerlu,
+        items: filled,
+        status: 'Menunggu'
+      };
+      updateLocData(locId, (prev: any) => ({
+        ...prev,
+        pendingRequests: [newRequest, ...(prev.pendingRequests || [])]
+      }));
+    }
+
     const fmtDate = (d: string) => { const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
     const itemLines = filled.map(m => `- ${m.nama}: ${m.jumlah} ${m.satuan}`).join('\n');
     const waText = `*Request Material*\n📍 ${locName}\n📅 Tgl Request: ${fmtDate(tglReq)}\n⏳ Diperlukan: ${fmtDate(tglPerlu)}\n\n${itemLines}\n\nMohon Segera Diproses.`;
 
     window.location.href = `whatsapp://send?text=${encodeURIComponent(waText)}`;
+    
+    // Reset form
+    setItems([{ id: `mi_${Date.now()}`, nama: '', jumlah: '', satuan: '' }]);
+    setTglPerlu('');
   };
 
   return (
@@ -160,18 +178,231 @@ function RequestTab({ locData, locName }: { locData: LocData, locName: string })
   );
 }
 
-function TrackingTab({ locData }: { locData: LocData }) {
+function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, updateLocData: any, locId: string | null }) {
   const pending = locData.pendingRequests || [];
+  const [isDoneOpen, setIsDoneOpen] = useState(false);
+  const [selectedReq, setSelectedReq] = useState<any>(null);
+  const [doneForm, setDoneForm] = useState({
+    penerima: '',
+    confirm: '',
+    statusSm: '',
+    picSupply: ''
+  });
+
+  const handleUpdateStatus = (id: string, newStatus: string) => {
+    if (!locId) return;
+    updateLocData(locId, (prev: any) => ({
+      ...prev,
+      pendingRequests: (prev.pendingRequests || []).map((req: any) => 
+        req.id === id ? { ...req, status: newStatus } : req
+      )
+    }));
+  };
+
+  const handleDelete = (id: string) => {
+    if (!locId) return;
+    if (confirm('Yakin ingin menghapus request ini?')) {
+      updateLocData(locId, (prev: any) => ({
+        ...prev,
+        pendingRequests: (prev.pendingRequests || []).filter((req: any) => req.id !== id)
+      }));
+    }
+  };
+
+  const handleOpenDone = (req: any) => {
+    setSelectedReq(req);
+    setDoneForm({
+      penerima: req.penerima || '',
+      confirm: req.confirm || '',
+      statusSm: req.statusSm || '',
+      picSupply: req.picSupply || ''
+    });
+    setIsDoneOpen(true);
+  };
+
+  const handleSaveDone = () => {
+    if (!locId || !selectedReq) return;
+    updateLocData(locId, (prev: any) => {
+      const newStock = { ...(prev.stock || {}) };
+      
+      if (selectedReq.items && Array.isArray(selectedReq.items)) {
+        selectedReq.items.forEach((item: any) => {
+          if (!item.nama) return;
+          
+          const itemName = capitalizeWords(item.nama.trim());
+          const itemQty = parseFloat(item.jumlah) || 0;
+          
+          const existingKey = Object.keys(newStock).find(
+            key => newStock[key].nama.toLowerCase() === itemName.toLowerCase()
+          );
+          
+          if (existingKey) {
+            newStock[existingKey].stok += itemQty;
+          } else {
+            newStock[`stk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`] = {
+              nama: itemName,
+              stok: itemQty,
+              satuan: item.satuan || ''
+            };
+          }
+        });
+      }
+
+      return {
+        ...prev,
+        stock: newStock,
+        pendingRequests: (prev.pendingRequests || []).map((r: any) => 
+          r.id === selectedReq.id ? { 
+            ...r, 
+            status: 'Selesai',
+            penerima: doneForm.penerima,
+            confirm: doneForm.confirm,
+            statusSm: doneForm.statusSm,
+            picSupply: doneForm.picSupply
+          } : r
+        )
+      };
+    });
+    setIsDoneOpen(false);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Menunggu': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Diproses': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Dikirim': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Selesai': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Dibatalkan': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const fmtDate = (d: string) => {
+    if (!d) return '';
+    const p = d.split('-');
+    return `${p[2]}/${p[1]}/${p[0]}`;
+  };
+
+  const RadioGroup = ({ label, options, value, onChange }: any) => (
+    <div className="flex flex-col gap-1.5 mb-3.5">
+      <label className="text-[10px] font-bold text-black/50 uppercase tracking-wide">{label}</label>
+      <div className="flex flex-wrap gap-2.5">
+        {options.map((opt: string) => (
+          <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+            <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${value === opt ? 'border-primary bg-primary' : 'border-black/20 bg-white'}`}>
+              {value === opt && <div className="w-1.5 h-1.5 rounded-full bg-primary-text" />}
+            </div>
+            <span className="text-xs text-[#1a1a1a]">{opt}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-3">
-      <button className="w-full bg-black/5 border border-black/10 p-2 text-[11px] rounded-lg text-[#1a1a1a] flex items-center justify-center gap-1.5">
-        <RefreshCw size={12} /> Refresh Tracking
-      </button>
       {pending.length === 0 ? (
-        <div className="text-[11px] text-black/25 text-center py-6">Belum ada request pending.</div>
+        <div className="text-[11px] text-black/25 text-center py-6">Belum ada request material.</div>
       ) : (
-        <div className="text-[11px] text-black/50 text-center">Tracking data will appear here.</div>
+        <div className="flex flex-col gap-3">
+          {pending.map((req: any) => (
+            <div key={req.id} className="bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-black/5 bg-black/[0.02]">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-black/40 uppercase tracking-wide">Req: {fmtDate(req.tglReq)}</span>
+                  <span className="text-[11px] font-bold text-[#1a1a1a]">Perlu: {fmtDate(req.tglPerlu)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={req.status || 'Menunggu'}
+                    onChange={(e) => handleUpdateStatus(req.id, e.target.value)}
+                    className={`text-[10px] font-bold px-2 py-1 rounded-md border outline-none appearance-none cursor-pointer ${getStatusColor(req.status || 'Menunggu')}`}
+                  >
+                    <option value="Menunggu">Menunggu</option>
+                    <option value="Diproses">Diproses</option>
+                    <option value="Dikirim">Dikirim</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Dibatalkan">Dibatalkan</option>
+                  </select>
+                  <button onClick={() => handleOpenDone(req)} className="bg-primary text-primary-text font-bold text-[10px] px-2.5 py-1 rounded-md shadow-sm">
+                    Done
+                  </button>
+                  <button onClick={() => handleDelete(req.id)} className="text-black/20 hover:text-red-500 transition-colors ml-1">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+              <div className="px-3 py-2">
+                <ul className="list-disc pl-4 m-0 space-y-1">
+                  {req.items.map((item: any, idx: number) => (
+                    <li key={idx} className="text-xs text-[#1a1a1a]">
+                      <span className="font-semibold">{item.nama}</span> — {item.jumlah} {item.satuan}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {(req.penerima || req.confirm || req.statusSm || req.picSupply) && (
+                <div className="px-3 py-2 border-t border-black/5 bg-black/[0.02] flex flex-col gap-2">
+                  <div className="text-[10px] text-black/60 grid grid-cols-2 gap-1.5">
+                    <div><span className="font-semibold text-black/80">Penerima:</span> {req.penerima || '-'}</div>
+                    <div><span className="font-semibold text-black/80">Confirm:</span> {req.confirm || '-'}</div>
+                    <div><span className="font-semibold text-black/80">Status SM:</span> {req.statusSm || '-'}</div>
+                    <div><span className="font-semibold text-black/80">PIC Supply:</span> {req.picSupply || '-'}</div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const itemsText = req.items.map((i: any) => `- ${i.nama} (${i.jumlah} ${i.satuan})`).join('\n');
+                      const text = `*Laporan Pengiriman Material*\n\n*Tanggal Request:* ${fmtDate(req.tglReq)}\n*Tanggal Perlu:* ${fmtDate(req.tglPerlu)}\n\n*Item:*\n${itemsText}\n\n*Status Pengiriman:*\nPenerima: ${req.penerima || '-'}\nConfirm: ${req.confirm || '-'}\nStatus SM: ${req.statusSm || '-'}\nPIC Supply: ${req.picSupply || '-'}\nStatus By SCM: -`;
+                      window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
+                    }}
+                    className="w-full bg-[#25D366] text-white font-bold text-[10px] py-1.5 rounded-md flex items-center justify-center gap-1.5"
+                  >
+                    Kirim Laporan WA
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
+
+      <Overlay isOpen={isDoneOpen} onClose={() => setIsDoneOpen(false)} title="Status Pengiriman (Done)">
+        <div className="flex flex-col pb-4">
+          <RadioGroup 
+            label="Penerima" 
+            options={['Site Manager', 'Mandor']} 
+            value={doneForm.penerima} 
+            onChange={(val: string) => setDoneForm({ ...doneForm, penerima: val })} 
+          />
+          <RadioGroup 
+            label="Confirm" 
+            options={['Diterima', 'Ditolak', 'Kurang']} 
+            value={doneForm.confirm} 
+            onChange={(val: string) => setDoneForm({ ...doneForm, confirm: val })} 
+          />
+          <RadioGroup 
+            label="Status by SM" 
+            options={['Sampai', 'Belum Sampai', 'Terlambat']} 
+            value={doneForm.statusSm} 
+            onChange={(val: string) => setDoneForm({ ...doneForm, statusSm: val })} 
+          />
+          <RadioGroup 
+            label="PIC Supply" 
+            options={['Toko', 'Pak Edi', 'Kurir', 'Pick Up']} 
+            value={doneForm.picSupply} 
+            onChange={(val: string) => setDoneForm({ ...doneForm, picSupply: val })} 
+          />
+          
+          <div className="flex flex-col gap-1.5 mb-4 opacity-50 pointer-events-none">
+            <label className="text-[10px] font-bold text-black/50 uppercase tracking-wide">Status By SCM</label>
+            <input disabled placeholder="Dikosongkan" className="bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs text-black/50" />
+          </div>
+
+          <button onClick={handleSaveDone} className="w-full bg-primary text-primary-text font-bold text-xs p-3.5 rounded-xl shadow-lg shadow-primary/20 mt-2">
+            Simpan & Selesaikan
+          </button>
+        </div>
+      </Overlay>
     </div>
   );
 }

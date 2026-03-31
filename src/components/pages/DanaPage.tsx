@@ -43,14 +43,44 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
     setIsItemFormOpen(true);
   };
 
-  const handleSaveItem = () => {
+  const handleSaveItem = (lastField?: 'hargaSatuan' | 'totalHarga') => {
     if (!itemForm.uraian.trim()) return alert('Isi nama barang dulu!');
+    
+    let finalItem = { ...itemForm };
+    let numHarga = parseFloat(finalItem.hargaSatuan.replace(/\D/g, '')) || 0;
+    let numTotal = parseFloat(finalItem.totalHarga.replace(/\D/g, '')) || 0;
+    const vol = parseFloat(finalItem.vol) || 0;
+
+    if (lastField === 'totalHarga') {
+        if (numTotal > 0 && numTotal < 1000) {
+            numTotal *= 1000;
+            finalItem.totalHarga = numTotal.toString();
+            finalItem.hargaSatuan = vol > 0 ? Math.round(numTotal / vol).toString() : '';
+        }
+    } else if (lastField === 'hargaSatuan') {
+        if (numHarga > 0 && numHarga < 1000) {
+            numHarga *= 1000;
+            finalItem.hargaSatuan = numHarga.toString();
+            finalItem.totalHarga = vol > 0 ? (numHarga * vol).toString() : '';
+        }
+    } else {
+        if (numHarga > 0 && numHarga < 1000) {
+            numHarga *= 1000;
+            finalItem.hargaSatuan = numHarga.toString();
+            finalItem.totalHarga = vol > 0 ? (numHarga * vol).toString() : '';
+        } else if (numTotal > 0 && numTotal < 1000) {
+            numTotal *= 1000;
+            finalItem.totalHarga = numTotal.toString();
+            finalItem.hargaSatuan = vol > 0 ? Math.round(numTotal / vol).toString() : '';
+        }
+    }
+
     if (editItemIdx !== null) {
       const newItems = [...items];
-      newItems[editItemIdx] = { ...newItems[editItemIdx], ...itemForm };
+      newItems[editItemIdx] = { ...newItems[editItemIdx], ...finalItem };
       setItems(newItems);
     } else {
-      setItems([...items, { id: `di_${Date.now()}`, ...itemForm }]);
+      setItems([...items, { id: `di_${Date.now()}`, ...finalItem }]);
     }
     setIsItemFormOpen(false);
   };
@@ -80,6 +110,60 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
     reader.readAsDataURL(file);
   };
 
+  const handleVolChange = (val: string) => {
+    const vol = parseFloat(val) || 0;
+    const harga = parseFloat(itemForm.hargaSatuan.replace(/\D/g, '')) || 0;
+    const total = vol * harga;
+    setItemForm({
+      ...itemForm,
+      vol: val,
+      totalHarga: total ? total.toString() : ''
+    });
+  };
+
+  const handleHargaSatuanChange = (val: string) => {
+    const cleanVal = val.replace(/\D/g, '');
+    const harga = parseFloat(cleanVal) || 0;
+    const vol = parseFloat(itemForm.vol) || 0;
+    const total = vol * harga;
+    setItemForm({
+      ...itemForm,
+      hargaSatuan: cleanVal,
+      totalHarga: total ? total.toString() : ''
+    });
+  };
+
+  const handleTotalHargaChange = (val: string) => {
+    const cleanVal = val.replace(/\D/g, '');
+    const total = parseFloat(cleanVal) || 0;
+    const vol = parseFloat(itemForm.vol) || 0;
+    const harga = vol > 0 ? Math.round(total / vol) : 0;
+    setItemForm({
+      ...itemForm,
+      totalHarga: cleanVal,
+      hargaSatuan: harga ? harga.toString() : ''
+    });
+  };
+
+  const handleBlurMultiply = (field: 'hargaSatuan' | 'totalHarga') => {
+    const currentVal = itemForm[field];
+    if (!currentVal) return;
+    const num = parseFloat(currentVal.replace(/\D/g, ''));
+    if (num > 0 && num < 1000) {
+      const newVal = (num * 1000).toString();
+      if (field === 'hargaSatuan') {
+        handleHargaSatuanChange(newVal);
+      } else {
+        handleTotalHargaChange(newVal);
+      }
+    }
+  };
+
+  const formatCurrency = (val: string) => {
+    const num = parseInt(val.replace(/\D/g, ''), 10);
+    return isNaN(num) ? '' : num.toLocaleString('id-ID');
+  };
+
   const handleSend = () => {
     const filled = items.filter(x => x.uraian.trim());
     if (!filled.length) return alert('Isi minimal 1 uraian!');
@@ -94,6 +178,30 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
     }).join('\n');
 
     const waText = `*Dana Lapangan — No. ${noSeri}*\n📍 ${locName}\n📅 ${fmtDate(tanggal)}\n🏷️ ${klasifikasi}\n\n${itemLines}\n\n*Total: Rp ${Math.round(total).toLocaleString('id-ID')}*`;
+    
+    const newDana = {
+      id: `dana_${Date.now()}`,
+      noSeri,
+      tgl: tanggal,
+      klasifikasi,
+      items: filled,
+      total,
+      fotoUrl
+    };
+    
+    if (state.activeLoc) {
+      updateLocData(state.activeLoc, prev => ({
+        ...prev,
+        danaNoSeri: noSeri + 1,
+        dana: [newDana, ...(prev.dana || [])]
+      }));
+    }
+    
+    setNoSeri(noSeri + 1);
+    setItems([{ id: `di_${Date.now()}`, uraian: '', vol: '', satuan: '', hargaSatuan: '', totalHarga: '' }]);
+    setFotoUrl(null);
+    setKlasifikasi('Bahan');
+    
     window.location.href = `whatsapp://send?text=${encodeURIComponent(waText)}`;
   };
 
@@ -231,7 +339,7 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1">
               <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Vol</label>
-              <input id="item-vol" type="number" value={itemForm.vol} onChange={e => setItemForm({ ...itemForm, vol: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('item-satuan')?.focus(); } }} placeholder="0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
+              <input id="item-vol" type="number" value={itemForm.vol} onChange={e => handleVolChange(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('item-satuan')?.focus(); } }} placeholder="0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Satuan</label>
@@ -241,11 +349,11 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1">
               <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Harga Satuan</label>
-              <input id="item-harga" type="number" value={itemForm.hargaSatuan} onChange={e => setItemForm({ ...itemForm, hargaSatuan: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('item-total')?.focus(); } }} placeholder="Rp 0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
+              <input id="item-harga" type="text" inputMode="numeric" value={formatCurrency(itemForm.hargaSatuan)} onChange={e => handleHargaSatuanChange(e.target.value)} onBlur={() => handleBlurMultiply('hargaSatuan')} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('item-total')?.focus(); } }} placeholder="Rp 0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Total Harga</label>
-              <input id="item-total" type="number" value={itemForm.totalHarga} onChange={e => setItemForm({ ...itemForm, totalHarga: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSaveItem(); } }} placeholder="Rp 0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
+              <input id="item-total" type="text" inputMode="numeric" value={formatCurrency(itemForm.totalHarga)} onChange={e => handleTotalHargaChange(e.target.value)} onBlur={() => handleBlurMultiply('totalHarga')} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSaveItem('totalHarga'); } }} placeholder="Rp 0" className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
             </div>
           </div>
           

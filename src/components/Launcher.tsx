@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, FileText, Package, Wallet, StickyNote, Link as LinkIcon, Wrench, MapPin, X } from 'lucide-react';
+import { Camera, FileText, Package, Wallet, Menu, Link as LinkIcon, Sparkles, MapPin, X } from 'lucide-react';
 import { AppState, LocData } from '../types';
 import Overlay from './Overlay';
 import { capitalizeWords } from '../utils';
@@ -137,12 +137,12 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
       <div className="shrink-0 w-full max-w-[340px] mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex justify-between w-full mb-6">
           {[
+            { id: 'catatan', icon: Menu },
             { id: 'report', icon: FileText },
             { id: 'material', icon: Package },
             { id: 'dana', icon: Wallet },
-            { id: 'catatan', icon: StickyNote },
             { id: 'link', icon: LinkIcon },
-            { id: 'tools', icon: Wrench },
+            { id: 'tools', icon: Sparkles },
           ].map(app => (
             <button
               key={app.id}

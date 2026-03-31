@@ -37,11 +37,15 @@ export interface AppState {
   locations: Location[];
   activeLoc: string | null;
   locData: Record<string, LocData>;
+  globalCatatan?: any[];
+  globalLinks?: any[];
 }
 
 export const defaultState: AppState = {
   profile: { name: 'Nama Pengguna', role: 'Jabatan', avatar: null },
   locations: [],
   activeLoc: null,
-  locData: {}
+  locData: {},
+  globalCatatan: [],
+  globalLinks: []
 };

@@ -60,9 +60,9 @@ export default function App() {
       case 'tools':
         return <ToolsPage state={state} locData={locData} updateLocData={updateLocData} onBack={() => setCurrentPage('launcher')} />;
       case 'catatan':
-        return <CatatanPage state={state} locData={locData} updateLocData={updateLocData} onBack={() => setCurrentPage('launcher')} />;
+        return <CatatanPage state={state} updateState={updateState} onBack={() => setCurrentPage('launcher')} />;
       case 'link':
-        return <LinkPage state={state} locData={locData} updateLocData={updateLocData} onBack={() => setCurrentPage('launcher')} />;
+        return <LinkPage state={state} locData={locData} updateLocData={updateLocData} updateState={updateState} onBack={() => setCurrentPage('launcher')} />;
       default:
         return <Launcher state={state} updateState={updateState} getLocData={getLocData} onOpenPage={setCurrentPage} />;
     }

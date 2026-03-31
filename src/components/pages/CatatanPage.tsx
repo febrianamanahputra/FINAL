@@ -6,31 +6,28 @@ import { capitalizeWords } from '../../utils';
 
 interface CatatanPageProps {
   state: AppState;
-  locData: LocData;
-  updateLocData: (locId: string, updater: (prev: LocData) => LocData) => void;
+  updateState: (updater: (prev: AppState) => AppState) => void;
   onBack: () => void;
 }
 
-export default function CatatanPage({ state, locData, updateLocData, onBack }: CatatanPageProps) {
+export default function CatatanPage({ state, updateState, onBack }: CatatanPageProps) {
   const [input, setInput] = useState('');
-  const locName = state.locations.find(l => l.id === state.activeLoc)?.name || '—';
+  const locName = 'Semua Proyek';
 
   const handleSave = () => {
-    if (!state.activeLoc) return alert('Pilih lokasi dulu!');
     if (!input.trim()) return;
     
-    updateLocData(state.activeLoc, prev => ({
+    updateState(prev => ({
       ...prev,
-      catatan: [{ id: Date.now(), teks: input.trim(), tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }, ...(prev.catatan || [])]
+      globalCatatan: [{ id: Date.now(), teks: input.trim(), tgl: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }, ...(prev.globalCatatan || [])]
     }));
     setInput('');
   };
 
   const handleDelete = (id: number) => {
-    if (!state.activeLoc) return;
-    updateLocData(state.activeLoc, prev => ({
+    updateState(prev => ({
       ...prev,
-      catatan: (prev.catatan || []).filter((c: any) => c.id !== id)
+      globalCatatan: (prev.globalCatatan || []).filter((c: any) => c.id !== id)
     }));
   };
 
@@ -65,8 +62,8 @@ export default function CatatanPage({ state, locData, updateLocData, onBack }: C
         <div className="text-[9px] text-black/35 uppercase tracking-[1.5px] mb-2.5">Catatan Tersimpan</div>
         
         <div className="flex flex-col gap-2">
-          {locData.catatan?.length ? (
-            locData.catatan.map((c: any) => (
+          {state.globalCatatan?.length ? (
+            state.globalCatatan.map((c: any) => (
               <div key={c.id} className="bg-black/5 border border-black/5 rounded-[10px] p-2.5 relative">
                 <div className="pr-7 whitespace-pre-wrap break-words text-xs font-medium text-black/80 mb-1">{c.teks}</div>
                 <div className="text-[10px] text-black/40">{c.tgl}</div>
