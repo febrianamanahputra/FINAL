@@ -72,6 +72,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
   const [progress, setProgress] = useState('0');
   const [constraints, setConstraints] = useState('');
   const [sni, setSni] = useState('');
+  const [taskDays, setTaskDays] = useState<number[]>([1]);
 
   const [matInput, setMatInput] = useState('');
   const [toolInput, setToolInput] = useState('');
@@ -86,9 +87,10 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
   const handleAiAnalyze = async () => {
     if (!taskName.trim()) return alert('Isi nama pekerjaan dulu untuk dianalisis AI!');
     
-    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    // @ts-ignore
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || (import.meta.env.VITE_GEMINI_API_KEY as string);
     if (!apiKey) {
-      alert('API Key tidak ditemukan di environment. Hubungi administrator.');
+      alert('API Key tidak ditemukan. Jika Anda sudah mempublish aplikasi, pastikan GEMINI_API_KEY sudah diatur di environment variables atau pengaturan platform.');
       return;
     }
 
@@ -127,7 +129,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
       if (data.sni) setSni(data.sni);
     } catch (error: any) {
       console.error('AI Error:', error);
-      alert(`Gagal menganalisis dengan AI: ${error?.message || 'Error tidak diketahui'}`);
+      alert(`Gagal menganalisis dengan AI: ${error?.message || 'Error tidak diketahui'}. Pastikan API Key valid.`);
     } finally {
       setIsAiLoading(false);
     }
@@ -143,6 +145,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
     setProgress('0');
     setConstraints('');
     setSni('');
+    setTaskDays([1]);
     setMatInput('');
     setToolInput('');
     setIsFormOpen(true);
@@ -158,6 +161,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
     setProgress(task.progress || '0');
     setConstraints(task.constraints || '');
     setSni(task.sni || '');
+    setTaskDays(task.days || [task.day] || [1]);
     setMatInput('');
     setToolInput('');
     setIsFormOpen(true);
@@ -177,7 +181,8 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
           targetDays,
           progress,
           constraints,
-          sni
+          sni,
+          days: taskDays
         };
 
         let newPekerjaan = prev.pekerjaan || [];
@@ -191,6 +196,24 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
       });
     }
     setIsFormOpen(false);
+  };
+
+  const toggleTaskDay = (taskId: string, day: number) => {
+    if (locId) {
+      updateLocData(locId, (prev: any) => ({
+        ...prev,
+        pekerjaan: (prev.pekerjaan || []).map((p: any) => {
+          if (p.id === taskId) {
+            const currentDays = p.days || [p.day] || [];
+            const newDays = currentDays.includes(day)
+              ? currentDays.filter((d: number) => d !== day)
+              : [...currentDays, day].sort((a, b) => a - b);
+            return { ...p, days: newDays };
+          }
+          return p;
+        })
+      }));
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -244,13 +267,26 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
             const primaryText = viewMode === 'item' ? p.teks : (p.labor || 'Tanpa Tukang');
             const secondaryText = viewMode === 'item' ? (p.labor || 'Tanpa Tukang') : p.teks;
             const isExpanded = expandedId === p.id;
+            const activeDays = p.days || [p.day] || [];
 
             return (
               <div key={p.id} className="bg-card border border-border shadow-sm rounded-[10px] overflow-hidden">
                 <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-3 flex justify-between items-center cursor-pointer hover:bg-text/5 transition-colors">
                   <div className="flex-1 pr-3">
-                    <div className="text-sm font-bold text-text leading-tight">{primaryText}</div>
-                    <div className="text-[11px] text-text/50 mt-1">{secondaryText}</div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="text-sm font-bold text-text leading-tight">{primaryText}</div>
+                      
+                      {/* Small 7-day bar in thumbnail */}
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                          <div 
+                            key={d} 
+                            className={`w-2.5 h-1 rounded-full ${activeDays.includes(d) ? 'bg-primary' : 'bg-text/10'}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-text/50 mt-1.5">{secondaryText}</div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-xs font-bold text-primary-text bg-primary/20 px-2 py-1 rounded-md">{p.progress || 0}%</div>
@@ -260,6 +296,26 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 
                 {isExpanded && (
                   <div className="px-3 pb-3 pt-2 border-t border-border flex flex-col gap-3 bg-text/[0.02]">
+                    {/* Large interactive 7-day bar */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="text-[9px] font-bold text-text/40 uppercase tracking-wider">Timeline (Tap hari untuk aktifkan)</div>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                          <button
+                            key={d}
+                            onClick={(e) => { e.stopPropagation(); toggleTaskDay(p.id, d); }}
+                            className={`flex-1 h-7 rounded-md text-[10px] font-bold transition-all ${
+                              activeDays.includes(d) 
+                                ? 'bg-primary text-primary-text shadow-sm' 
+                                : 'bg-text/5 text-text/30 border border-border'
+                            }`}
+                          >
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {p.materials?.length > 0 && (
                       <div>
                         <div className="text-[10px] font-bold text-text/40 uppercase tracking-wider mb-1.5">Material</div>
@@ -335,6 +391,9 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 {isAiLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
               </button>
             </div>
+            <p className="text-[8px] text-text/30 mt-0.5 italic">
+              *Fitur AI memerlukan GEMINI_API_KEY di environment variables setelah dipublish.
+            </p>
           </div>
 
           <div className="flex flex-col gap-1">
@@ -424,6 +483,30 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 placeholder="0"
                 className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary"
               />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Pilih Hari (1-7)</label>
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                <button
+                  key={d}
+                  onClick={() => {
+                    const newDays = taskDays.includes(d)
+                      ? taskDays.filter(day => day !== d)
+                      : [...taskDays, d].sort((a, b) => a - b);
+                    setTaskDays(newDays);
+                  }}
+                  className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${
+                    taskDays.includes(d) 
+                      ? 'bg-primary text-primary-text shadow-sm' 
+                      : 'bg-text/5 text-text/40 border border-border'
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
             </div>
           </div>
 
