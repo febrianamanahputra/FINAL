@@ -20,14 +20,14 @@ export default function MaterialPage({ state, locData, updateLocData, onBack }: 
   const locName = state.locations.find(l => l.id === state.activeLoc)?.name || '—';
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-bg">
       <PageHeader
         title="Material"
         subtitle={locName}
         onBack={onBack}
       />
       
-      <div className="flex gap-1 px-5 pt-2 border-b border-black/5 shrink-0 overflow-x-auto hide-scrollbar">
+      <div className="flex gap-1 px-5 pt-2 border-b border-border shrink-0 overflow-x-auto hide-scrollbar">
         {[
           { id: 'request', label: 'Request' },
           { id: 'tracking', label: 'Tracking' },
@@ -39,8 +39,8 @@ export default function MaterialPage({ state, locData, updateLocData, onBack }: 
             onClick={() => setActiveTab(tab.id as TabType)}
             className={`px-2 py-1.5 text-[10px] font-medium whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id 
-                ? 'border-primary text-[#1a1a1a]' 
-                : 'border-transparent text-black/35 hover:text-black/60'
+                ? 'border-primary text-text' 
+                : 'border-transparent text-text/35 hover:text-text/60'
             }`}
           >
             {tab.label}
@@ -109,17 +109,17 @@ function RequestTab({ locData, locName, updateLocData, locId }: { locData: LocDa
     <div className="flex flex-col gap-3">
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className="text-[9px] text-black/35 uppercase tracking-[1.2px] mb-1 block">Tanggal Request</label>
-          <input type="date" value={tglReq} onChange={e => setTglReq(e.target.value)} className="w-full bg-white border border-black/10 rounded-lg px-2.5 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
+          <label className="text-[9px] text-text/35 uppercase tracking-[1.2px] mb-1 block">Tanggal Request</label>
+          <input type="date" value={tglReq} onChange={e => setTglReq(e.target.value)} className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-xs text-text outline-none focus:border-primary" />
         </div>
         <div className="flex-1">
-          <label className="text-[9px] text-black/35 uppercase tracking-[1.2px] mb-1 block">Tanggal Diperlukan</label>
-          <input type="date" value={tglPerlu} onChange={e => setTglPerlu(e.target.value)} className="w-full bg-white border border-black/10 rounded-lg px-2.5 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary" />
+          <label className="text-[9px] text-text/35 uppercase tracking-[1.2px] mb-1 block">Tanggal Diperlukan</label>
+          <input type="date" value={tglPerlu} onChange={e => setTglPerlu(e.target.value)} className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-xs text-text outline-none focus:border-primary" />
         </div>
       </div>
 
       <div className="flex items-center justify-between mt-1 mb-2">
-        <div className="text-[9px] text-black/35 uppercase tracking-[1.5px]">Item Material</div>
+        <div className="text-[9px] text-text/35 uppercase tracking-[1.5px]">Item Material</div>
         <button onClick={handleAddItem} className="bg-primary text-primary-text font-medium text-[10px] px-2.5 py-1 rounded flex items-center gap-1">
           <Plus size={12} /> Item
         </button>
@@ -127,17 +127,17 @@ function RequestTab({ locData, locName, updateLocData, locId }: { locData: LocDa
 
       <div className="flex flex-col gap-2.5">
         {items.map((item, idx) => (
-          <div key={item.id} className="bg-white border border-black/10 rounded-[10px] overflow-hidden flex flex-col">
-            <div className="flex items-center border-b border-black/5">
+          <div key={item.id} className="bg-card border border-border rounded-[10px] overflow-hidden flex flex-col">
+            <div className="flex items-center border-b border-border">
               <input
                 id={`req-nama-${idx}`}
                 value={item.nama}
                 onChange={e => handleUpdateItem(item.id, 'nama', e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById(`req-jumlah-${idx}`)?.focus(); } }}
                 placeholder="Nama Barang..."
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-[#1a1a1a] px-3 py-2.5 placeholder:text-black/20"
+                className="flex-1 bg-transparent border-none outline-none text-[13px] text-text px-3 py-2.5 placeholder:text-text/20"
               />
-              <button onClick={() => handleRemoveItem(item.id)} className="px-3.5 text-black/25 hover:text-red-600 text-lg leading-none">×</button>
+              <button onClick={() => handleRemoveItem(item.id)} className="px-3.5 text-text/25 hover:text-red-600 text-lg leading-none">×</button>
             </div>
             <div className="flex items-center">
               <input
@@ -146,7 +146,7 @@ function RequestTab({ locData, locName, updateLocData, locId }: { locData: LocDa
                 onChange={e => handleUpdateItem(item.id, 'jumlah', e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById(`req-satuan-${idx}`)?.focus(); } }}
                 placeholder="Jumlah"
-                className="flex-1 bg-transparent border-none border-r border-black/5 outline-none text-xs text-[#1a1a1a] px-2.5 py-2 placeholder:text-black/20"
+                className="flex-1 bg-transparent border-none border-r border-border outline-none text-xs text-text px-2.5 py-2 placeholder:text-text/20"
               />
               <input
                 id={`req-satuan-${idx}`}
@@ -164,7 +164,7 @@ function RequestTab({ locData, locName, updateLocData, locId }: { locData: LocDa
                   }
                 }}
                 placeholder="Satuan (pcs, kg...)"
-                className="flex-1 bg-transparent border-none outline-none text-xs text-[#1a1a1a] px-2.5 py-2 placeholder:text-black/20"
+                className="flex-1 bg-transparent border-none outline-none text-xs text-text px-2.5 py-2 placeholder:text-text/20"
               />
             </div>
           </div>
@@ -273,7 +273,7 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
       case 'Dikirim': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'Selesai': return 'bg-green-100 text-green-800 border-green-200';
       case 'Dibatalkan': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-text/5 text-text/80 border-border';
     }
   };
 
@@ -285,14 +285,14 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
 
   const RadioGroup = ({ label, options, value, onChange }: any) => (
     <div className="flex flex-col gap-1.5 mb-3.5">
-      <label className="text-[10px] font-bold text-black/50 uppercase tracking-wide">{label}</label>
+      <label className="text-[10px] font-bold text-text/50 uppercase tracking-wide">{label}</label>
       <div className="flex flex-wrap gap-2.5">
         {options.map((opt: string) => (
           <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
-            <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${value === opt ? 'border-primary bg-primary' : 'border-black/20 bg-white'}`}>
+            <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${value === opt ? 'border-primary bg-primary' : 'border-border bg-card'}`}>
               {value === opt && <div className="w-1.5 h-1.5 rounded-full bg-primary-text" />}
             </div>
-            <span className="text-xs text-[#1a1a1a]">{opt}</span>
+            <span className="text-xs text-text">{opt}</span>
           </label>
         ))}
       </div>
@@ -302,15 +302,15 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
   return (
     <div className="flex flex-col gap-3">
       {pending.length === 0 ? (
-        <div className="text-[11px] text-black/25 text-center py-6">Belum ada request material.</div>
+        <div className="text-[11px] text-text/25 text-center py-6">Belum ada request material.</div>
       ) : (
         <div className="flex flex-col gap-3">
           {pending.map((req: any) => (
-            <div key={req.id} className="bg-white border border-black/10 rounded-xl overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-black/5 bg-black/[0.02]">
+            <div key={req.id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-text/[0.02]">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-black/40 uppercase tracking-wide">Req: {fmtDate(req.tglReq)}</span>
-                  <span className="text-[11px] font-bold text-[#1a1a1a]">Perlu: {fmtDate(req.tglPerlu)}</span>
+                  <span className="text-[10px] text-text/40 uppercase tracking-wide">Req: {fmtDate(req.tglReq)}</span>
+                  <span className="text-[11px] font-bold text-text">Perlu: {fmtDate(req.tglPerlu)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <select
@@ -327,7 +327,7 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
                   <button onClick={() => handleOpenDone(req)} className="bg-primary text-primary-text font-bold text-[10px] px-2.5 py-1 rounded-md shadow-sm">
                     Done
                   </button>
-                  <button onClick={() => handleDelete(req.id)} className="text-black/20 hover:text-red-500 transition-colors ml-1">
+                  <button onClick={() => handleDelete(req.id)} className="text-text/20 hover:text-red-500 transition-colors ml-1">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -335,19 +335,19 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
               <div className="px-3 py-2">
                 <ul className="list-disc pl-4 m-0 space-y-1">
                   {req.items.map((item: any, idx: number) => (
-                    <li key={idx} className="text-xs text-[#1a1a1a]">
+                    <li key={idx} className="text-xs text-text">
                       <span className="font-semibold">{item.nama}</span> — {item.jumlah} {item.satuan}
                     </li>
                   ))}
                 </ul>
               </div>
               {(req.penerima || req.confirm || req.statusSm || req.picSupply) && (
-                <div className="px-3 py-2 border-t border-black/5 bg-black/[0.02] flex flex-col gap-2">
-                  <div className="text-[10px] text-black/60 grid grid-cols-2 gap-1.5">
-                    <div><span className="font-semibold text-black/80">Penerima:</span> {req.penerima || '-'}</div>
-                    <div><span className="font-semibold text-black/80">Confirm:</span> {req.confirm || '-'}</div>
-                    <div><span className="font-semibold text-black/80">Status SM:</span> {req.statusSm || '-'}</div>
-                    <div><span className="font-semibold text-black/80">PIC Supply:</span> {req.picSupply || '-'}</div>
+                <div className="px-3 py-2 border-t border-border bg-text/[0.02] flex flex-col gap-2">
+                  <div className="text-[10px] text-text/60 grid grid-cols-2 gap-1.5">
+                    <div><span className="font-semibold text-text/80">Penerima:</span> {req.penerima || '-'}</div>
+                    <div><span className="font-semibold text-text/80">Confirm:</span> {req.confirm || '-'}</div>
+                    <div><span className="font-semibold text-text/80">Status SM:</span> {req.statusSm || '-'}</div>
+                    <div><span className="font-semibold text-text/80">PIC Supply:</span> {req.picSupply || '-'}</div>
                   </div>
                   <button 
                     onClick={() => {
@@ -394,8 +394,8 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
           />
           
           <div className="flex flex-col gap-1.5 mb-4 opacity-50 pointer-events-none">
-            <label className="text-[10px] font-bold text-black/50 uppercase tracking-wide">Status By SCM</label>
-            <input disabled placeholder="Dikosongkan" className="bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs text-black/50" />
+            <label className="text-[10px] font-bold text-text/50 uppercase tracking-wide">Status By SCM</label>
+            <input disabled placeholder="Dikosongkan" className="bg-text/5 border border-border rounded-lg px-3 py-2 text-xs text-text/50" />
           </div>
 
           <button onClick={handleSaveDone} className="w-full bg-primary text-primary-text font-bold text-xs p-3.5 rounded-xl shadow-lg shadow-primary/20 mt-2">
@@ -481,12 +481,12 @@ function StockTab({ locData, updateLocData, locId, locName }: { locData: LocData
     <div className="flex flex-col gap-3">
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/25" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text/25" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cari material..."
-            className="w-full bg-white border border-black/10 rounded-lg pl-9 pr-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+            className="w-full bg-card border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text outline-none focus:border-primary"
           />
         </div>
         <button onClick={handleOpenAdd} className="bg-primary text-primary-text font-medium text-[11px] px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1">
@@ -498,9 +498,9 @@ function StockTab({ locData, updateLocData, locId, locName }: { locData: LocData
         <Send size={14} /> Laporan Stok ke WA
       </button>
       
-      <div className="flex flex-col bg-white border border-black/5 rounded-xl overflow-hidden shadow-sm">
+      <div className="flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {filtered.length === 0 ? (
-          <div className="text-[11px] text-black/25 text-center py-10 flex flex-col items-center gap-2">
+          <div className="text-[11px] text-text/25 text-center py-10 flex flex-col items-center gap-2">
             <Package size={24} className="opacity-10" />
             {search ? 'Material tidak ditemukan.' : 'Stok gudang kosong.'}
           </div>
@@ -509,21 +509,21 @@ function StockTab({ locData, updateLocData, locId, locName }: { locData: LocData
             <div 
               key={s.id} 
               onClick={() => handleOpenEdit(s)}
-              className={`flex items-center px-4 py-3 cursor-pointer hover:bg-black/[0.02] transition-colors ${i < filtered.length - 1 ? 'border-b border-black/5' : ''}`}
+              className={`flex items-center px-4 py-3 cursor-pointer hover:bg-text/[0.02] transition-colors ${i < filtered.length - 1 ? 'border-b border-border' : ''}`}
             >
               <div className="flex-1">
-                <div className="text-xs text-[#1a1a1a] font-bold">{s.nama}</div>
-                <div className="text-[10px] text-black/40 mt-0.5">ID: {s.id}</div>
+                <div className="text-xs text-text font-bold">{s.nama}</div>
+                <div className="text-[10px] text-text/40 mt-0.5">ID: {s.id}</div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <div className={`font-mono text-sm font-bold ${s.stok === 0 ? 'text-red-500' : 'text-primary-text'}`}>
                   {s.stok}
                 </div>
-                <div className="text-[10px] text-black/40 min-w-[32px]">{s.satuan}</div>
+                <div className="text-[10px] text-text/40 min-w-[32px]">{s.satuan}</div>
                 {s.stok === 0 && (
                   <span className="text-[8px] bg-red-50 text-red-600 px-1.5 py-0.5 font-bold rounded tracking-wide">HABIS</span>
                 )}
-                <Edit3 size={12} className="text-black/10 ml-1" />
+                <Edit3 size={12} className="text-text/10 ml-1" />
               </div>
             </div>
           ))
@@ -533,34 +533,34 @@ function StockTab({ locData, updateLocData, locId, locName }: { locData: LocData
       <Overlay isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={editId ? "Edit Stok" : "Tambah Stok"}>
         <div className="flex flex-col gap-4 pb-6">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px] font-bold">Nama Material</label>
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px] font-bold">Nama Material</label>
             <input
               autoFocus
               value={nama}
               onChange={e => setNama(e.target.value)}
               placeholder="Semen, Pasir, Besi D12..."
-              className="bg-black/5 border border-black/10 rounded-xl px-3.5 py-3 text-sm text-[#1a1a1a] outline-none focus:border-primary"
+              className="bg-text/5 border border-border rounded-xl px-3.5 py-3 text-sm text-text outline-none focus:border-primary"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px] font-bold">Jumlah Stok</label>
+              <label className="text-[9px] text-text/40 uppercase tracking-[1.5px] font-bold">Jumlah Stok</label>
               <input
                 type="number"
                 value={stok}
                 onChange={e => setStok(e.target.value)}
                 placeholder="0"
-                className="bg-black/5 border border-black/10 rounded-xl px-3.5 py-3 text-sm text-[#1a1a1a] outline-none focus:border-primary"
+                className="bg-text/5 border border-border rounded-xl px-3.5 py-3 text-sm text-text outline-none focus:border-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px] font-bold">Satuan</label>
+              <label className="text-[9px] text-text/40 uppercase tracking-[1.5px] font-bold">Satuan</label>
               <input
                 value={satuan}
                 onChange={e => setSatuan(e.target.value)}
                 placeholder="zak, m3, btg..."
-                className="bg-black/5 border border-black/10 rounded-xl px-3.5 py-3 text-sm text-[#1a1a1a] outline-none focus:border-primary"
+                className="bg-text/5 border border-border rounded-xl px-3.5 py-3 text-sm text-text outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -604,17 +604,17 @@ function ShopTab({ locName }: { locName: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-[9px] text-black/35 uppercase tracking-[1.5px] mb-1">Daftar Belanja</div>
+      <div className="text-[9px] text-text/35 uppercase tracking-[1.5px] mb-1">Daftar Belanja</div>
       {items.map((item, idx) => (
         <div key={item.id} className="flex gap-0 mb-1">
-          <div className="w-[22px] shrink-0 text-[11px] text-black/30 py-2.5 pr-1 flex items-center">{idx + 1}.</div>
+          <div className="w-[22px] shrink-0 text-[11px] text-text/30 py-2.5 pr-1 flex items-center">{idx + 1}.</div>
           <input
             id={`shop-nama-${idx}`}
             value={item.nama}
             onChange={e => setItems(items.map(i => i.id === item.id ? { ...i, nama: capitalizeWords(e.target.value) } : i))}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById(`shop-jumlah-${idx}`)?.focus(); } }}
             placeholder="Nama barang..."
-            className="flex-[1.6] bg-black/5 border border-black/10 border-r-0 rounded-l-lg px-2.5 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+            className="flex-[1.6] bg-text/5 border border-border border-r-0 rounded-l-lg px-2.5 py-2 text-xs text-text outline-none focus:border-primary"
           />
           <input
             id={`shop-jumlah-${idx}`}
@@ -632,11 +632,11 @@ function ShopTab({ locName }: { locName: string }) {
               }
             }}
             placeholder="Jml / Satuan"
-            className="flex-1 bg-black/5 border border-black/10 rounded-r-lg px-2.5 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+            className="flex-1 bg-text/5 border border-border rounded-r-lg px-2.5 py-2 text-xs text-text outline-none focus:border-primary"
           />
         </div>
       ))}
-      <button onClick={handleAddBaris} className="w-full bg-transparent border-[1.5px] border-dashed border-primary/50 rounded-lg p-2.5 text-[11px] text-[#4a8800] mt-1">
+      <button onClick={handleAddBaris} className="w-full bg-transparent border-[1.5px] border-dashed border-primary/50 rounded-lg p-2.5 text-[11px] text-primary-dark mt-1">
         + Baris
       </button>
       <button onClick={handleSend} className="w-full bg-[#25D366] text-white font-medium text-[13px] p-3 rounded-lg flex items-center justify-center gap-2 mt-3">

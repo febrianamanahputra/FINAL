@@ -6,8 +6,19 @@
   --font-condensed: "Barlow Condensed", sans-serif;
   
   --color-primary: #aaee00;
-  --color-primary-dark: #7acc00;
-  --color-primary-text: #2a4a00;
+  --color-primary-dark: color-mix(in srgb, var(--color-primary) 80%, black);
+  --color-primary-text: color-mix(in srgb, var(--color-primary) 30%, black);
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-border: rgba(0,0,0,0.15);
+  --color-card: #ffffff;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
 }
 
 @layer utilities {

@@ -21,14 +21,14 @@ export default function ToolsPage({ state, locData, updateLocData, onBack }: Too
   const locName = state.locations.find(l => l.id === state.activeLoc)?.name || '—';
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-bg">
       <PageHeader
         title="Tools"
         subtitle={locName}
         onBack={onBack}
       />
       
-      <div className="flex gap-0.5 px-5 pt-2 border-b border-black/5 shrink-0 overflow-x-auto hide-scrollbar">
+      <div className="flex gap-0.5 px-5 pt-2 border-b border-border shrink-0 overflow-x-auto hide-scrollbar">
         {[
           { id: 'action', label: 'Action Plan' },
           { id: 'aimaterial', label: 'AI Material Plan' },
@@ -41,8 +41,8 @@ export default function ToolsPage({ state, locData, updateLocData, onBack }: Too
             onClick={() => setActiveTab(tab.id as TabType)}
             className={`px-2 py-1.5 text-[10px] font-medium whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id 
-                ? 'border-primary text-[#1a1a1a]' 
-                : 'border-transparent text-black/35 hover:text-black/60'
+                ? 'border-primary text-text' 
+                : 'border-transparent text-text/35 hover:text-text/60'
             }`}
           >
             {tab.label}
@@ -231,14 +231,14 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
         <Plus size={14} /> Tambah Pekerjaan
       </button>
 
-      <div className="flex bg-black/5 p-1 rounded-lg mt-1">
-        <button onClick={() => setViewMode('item')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'item' ? 'bg-white shadow-sm text-[#1a1a1a]' : 'text-black/40'}`}>Berdasarkan Item</button>
-        <button onClick={() => setViewMode('labor')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'labor' ? 'bg-white shadow-sm text-[#1a1a1a]' : 'text-black/40'}`}>Berdasarkan Tukang</button>
+      <div className="flex bg-text/5 p-1 rounded-lg mt-1">
+        <button onClick={() => setViewMode('item')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'item' ? 'bg-card shadow-sm text-text' : 'text-text/40'}`}>Berdasarkan Item</button>
+        <button onClick={() => setViewMode('labor')} className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${viewMode === 'labor' ? 'bg-card shadow-sm text-text' : 'text-text/40'}`}>Berdasarkan Tukang</button>
       </div>
       
       <div className="flex flex-col gap-2.5 mt-1">
         {sortedPekerjaan.length === 0 ? (
-          <div className="text-[11px] text-black/25 text-center py-6">Belum ada action plan.</div>
+          <div className="text-[11px] text-text/25 text-center py-6">Belum ada action plan.</div>
         ) : (
           sortedPekerjaan.map((p: any) => {
             const primaryText = viewMode === 'item' ? p.teks : (p.labor || 'Tanpa Tukang');
@@ -246,26 +246,26 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
             const isExpanded = expandedId === p.id;
 
             return (
-              <div key={p.id} className="bg-white border border-black/10 shadow-sm rounded-[10px] overflow-hidden">
-                <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-3 flex justify-between items-center cursor-pointer hover:bg-black/5 transition-colors">
+              <div key={p.id} className="bg-card border border-border shadow-sm rounded-[10px] overflow-hidden">
+                <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-3 flex justify-between items-center cursor-pointer hover:bg-text/5 transition-colors">
                   <div className="flex-1 pr-3">
-                    <div className="text-sm font-bold text-[#1a1a1a] leading-tight">{primaryText}</div>
-                    <div className="text-[11px] text-black/50 mt-1">{secondaryText}</div>
+                    <div className="text-sm font-bold text-text leading-tight">{primaryText}</div>
+                    <div className="text-[11px] text-text/50 mt-1">{secondaryText}</div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-xs font-bold text-primary-text bg-primary/20 px-2 py-1 rounded-md">{p.progress || 0}%</div>
-                    {isExpanded ? <ChevronUp size={16} className="text-black/40" /> : <ChevronDown size={16} className="text-black/40" />}
+                    {isExpanded ? <ChevronUp size={16} className="text-text/40" /> : <ChevronDown size={16} className="text-text/40" />}
                   </div>
                 </div>
                 
                 {isExpanded && (
-                  <div className="px-3 pb-3 pt-2 border-t border-black/5 flex flex-col gap-3 bg-black/[0.02]">
+                  <div className="px-3 pb-3 pt-2 border-t border-border flex flex-col gap-3 bg-text/[0.02]">
                     {p.materials?.length > 0 && (
                       <div>
-                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1.5">Material</div>
+                        <div className="text-[10px] font-bold text-text/40 uppercase tracking-wider mb-1.5">Material</div>
                         <div className="flex flex-wrap gap-1.5">
                           {p.materials.map((m: string, i: number) => (
-                            <span key={i} className="bg-[#e8f5e9] text-[#2e7d32] text-[10px] px-2 py-1 rounded-md border border-[#c8e6c9]">{m}</span>
+                            <span key={i} className="bg-green-500/10 text-green-700 text-[10px] px-2 py-1 rounded-md border border-green-500/20">{m}</span>
                           ))}
                         </div>
                         <div className="h-[1px] w-full bg-[#25D366] mt-3 opacity-40"></div>
@@ -274,10 +274,10 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                     
                     {p.tools?.length > 0 && (
                       <div>
-                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1.5">Alat</div>
+                        <div className="text-[10px] font-bold text-text/40 uppercase tracking-wider mb-1.5">Alat</div>
                         <div className="flex flex-wrap gap-1.5">
                           {p.tools.map((t: string, i: number) => (
-                            <span key={i} className="bg-[#e8f5e9] text-[#2e7d32] text-[10px] px-2 py-1 rounded-md border border-[#c8e6c9]">{t}</span>
+                            <span key={i} className="bg-green-500/10 text-green-700 text-[10px] px-2 py-1 rounded-md border border-green-500/20">{t}</span>
                           ))}
                         </div>
                         <div className="h-[1px] w-full bg-[#25D366] mt-3 opacity-40"></div>
@@ -286,19 +286,19 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
 
                     {p.constraints && (
                       <div>
-                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1">Kemungkinan Kendala & Perhatian</div>
-                        <div className="text-[11px] text-black/70 leading-relaxed whitespace-pre-wrap">{p.constraints}</div>
+                        <div className="text-[10px] font-bold text-text/40 uppercase tracking-wider mb-1">Kemungkinan Kendala & Perhatian</div>
+                        <div className="text-[11px] text-text/70 leading-relaxed whitespace-pre-wrap">{p.constraints}</div>
                       </div>
                     )}
 
                     {p.sni && (
                       <div>
-                        <div className="text-[10px] font-bold text-black/40 uppercase tracking-wider mb-1">Standar SNI</div>
-                        <div className="text-[11px] text-black/70 leading-relaxed whitespace-pre-wrap">{p.sni}</div>
+                        <div className="text-[10px] font-bold text-text/40 uppercase tracking-wider mb-1">Standar SNI</div>
+                        <div className="text-[11px] text-text/70 leading-relaxed whitespace-pre-wrap">{p.sni}</div>
                       </div>
                     )}
 
-                    <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-black/5">
+                    <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-border">
                       <button onClick={() => handleOpenEdit(p)} className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-md font-medium transition-colors hover:bg-blue-100">
                         <Edit3 size={12} /> Edit Keterangan
                       </button>
@@ -317,7 +317,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
       <Overlay isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={editTaskId ? "Edit Pekerjaan" : "Tambah Action Plan"}>
         <div className="flex flex-col gap-3.5 pb-6">
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Nama Pekerjaan</label>
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Nama Pekerjaan</label>
             <div className="flex gap-2">
               <input
                 autoFocus
@@ -325,7 +325,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 onChange={e => setTaskName(capitalizeWords(e.target.value))}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('mat-input')?.focus(); } }}
                 placeholder="contoh: Pengecatan Lt.1"
-                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+                className="flex-1 bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary"
               />
               <button 
                 onClick={handleAiAnalyze} 
@@ -338,7 +338,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Material — pilih AI atau ketik</label>
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Material — pilih AI atau ketik</label>
             <div className="flex gap-2">
               <input
                 id="mat-input"
@@ -346,9 +346,9 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 onChange={e => setMatInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addMaterial(); } }}
                 placeholder="Ketik material..."
-                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+                className="flex-1 bg-text/5 border border-border rounded-[10px] px-3 py-2 text-xs text-text outline-none focus:border-primary"
               />
-              <button onClick={addMaterial} className="bg-black/5 border border-black/10 rounded-[10px] px-3 flex items-center justify-center text-black/50 hover:bg-black/10">
+              <button onClick={addMaterial} className="bg-text/5 border border-border rounded-[10px] px-3 flex items-center justify-center text-text/50 hover:bg-text/10">
                 <Plus size={16} />
               </button>
             </div>
@@ -364,7 +364,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Alat — pilih AI atau ketik</label>
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Alat — pilih AI atau ketik</label>
             <div className="flex gap-2">
               <input
                 id="tool-input"
@@ -372,9 +372,9 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 onChange={e => setToolInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTool(); } }}
                 placeholder="Ketik alat..."
-                className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+                className="flex-1 bg-text/5 border border-border rounded-[10px] px-3 py-2 text-xs text-text outline-none focus:border-primary"
               />
-              <button onClick={addTool} className="bg-black/5 border border-black/10 rounded-[10px] px-3 flex items-center justify-center text-black/50 hover:bg-black/10">
+              <button onClick={addTool} className="bg-text/5 border border-border rounded-[10px] px-3 flex items-center justify-center text-text/50 hover:bg-text/10">
                 <Plus size={16} />
               </button>
             </div>
@@ -390,19 +390,19 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Tukang / Tenaga</label>
+            <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Tukang / Tenaga</label>
             <input
               value={labor}
               onChange={e => setLabor(capitalizeWords(e.target.value))}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('target-hari')?.focus(); } }}
               placeholder="Mandor, Buruh, Sub-kon..."
-              className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+              className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1">
-              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Target Hari</label>
+              <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Target Hari</label>
               <input
                 id="target-hari"
                 type="number"
@@ -410,11 +410,11 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 onChange={e => setTargetDays(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('progress-input')?.focus(); } }}
                 placeholder="0"
-                className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+                className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Progress (%)</label>
+              <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Progress (%)</label>
               <input
                 id="progress-input"
                 type="number"
@@ -422,7 +422,7 @@ function ActionPlanTab({ locData, updateLocData, locId }: { locData: LocData, up
                 onChange={e => setProgress(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSave(); } }}
                 placeholder="0"
-                className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary"
+                className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -469,80 +469,80 @@ function VolumeTab() {
   const luasDinding = keliling * (parseFloat(rt) || 0);
 
   return (
-    <div className="border border-black/10 rounded-lg overflow-hidden flex flex-col">
-      <div className="p-3.5 border-b border-black/10">
-        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Luas Persegi</div>
+    <div className="border border-border rounded-lg overflow-hidden flex flex-col">
+      <div className="p-3.5 border-b border-border">
+        <div className="text-[9px] font-semibold text-text/35 uppercase tracking-[1.2px] mb-2.5">Luas Persegi</div>
         <div className="flex gap-2.5 items-end">
           <div className="flex-1">
-            <div className="text-[9px] text-black/40 mb-1">Panjang (m)</div>
-            <input id="vol-p" type="number" value={p} onChange={e => setP(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-l')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">Panjang (m)</div>
+            <input id="vol-p" type="number" value={p} onChange={e => setP(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-l')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
-          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="text-[13px] text-text/30 pb-2.5">×</div>
           <div className="flex-1">
-            <div className="text-[9px] text-black/40 mb-1">Lebar (m)</div>
-            <input id="vol-l" type="number" value={l} onChange={e => setL(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kp')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">Lebar (m)</div>
+            <input id="vol-l" type="number" value={l} onChange={e => setL(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kp')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
-          <div className="text-[13px] text-black/30 pb-2.5">=</div>
-          <div className="flex-1 bg-[#f5ffe0] p-2 text-center rounded">
-            <div className="text-[9px] text-black/40">Luas</div>
+          <div className="text-[13px] text-text/30 pb-2.5">=</div>
+          <div className="flex-1 bg-primary/10 p-2 text-center rounded">
+            <div className="text-[9px] text-text/40">Luas</div>
             <div className="text-base font-bold text-primary-text font-mono">{luas.toFixed(2)}</div>
-            <div className="text-[9px] text-black/40">m²</div>
+            <div className="text-[9px] text-text/40">m²</div>
           </div>
         </div>
       </div>
 
-      <div className="p-3.5 border-b border-black/10">
-        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Volume Kubik</div>
+      <div className="p-3.5 border-b border-border">
+        <div className="text-[9px] font-semibold text-text/35 uppercase tracking-[1.2px] mb-2.5">Volume Kubik</div>
         <div className="flex gap-1.5 items-end">
           <div className="flex-1 min-w-0">
-            <div className="text-[9px] text-black/40 mb-1">P (m)</div>
-            <input id="vol-kp" type="number" value={kp} onChange={e => setKp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kl')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">P (m)</div>
+            <input id="vol-kp" type="number" value={kp} onChange={e => setKp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kl')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
-          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="text-[13px] text-text/30 pb-2.5">×</div>
           <div className="flex-1 min-w-0">
-            <div className="text-[9px] text-black/40 mb-1">L (m)</div>
-            <input id="vol-kl" type="number" value={kl} onChange={e => setKl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kt')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">L (m)</div>
+            <input id="vol-kl" type="number" value={kl} onChange={e => setKl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-kt')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
-          <div className="text-[13px] text-black/30 pb-2.5">×</div>
+          <div className="text-[13px] text-text/30 pb-2.5">×</div>
           <div className="flex-1 min-w-0">
-            <div className="text-[9px] text-black/40 mb-1">T (m)</div>
-            <input id="vol-kt" type="number" value={kt} onChange={e => setKt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rp')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">T (m)</div>
+            <input id="vol-kt" type="number" value={kt} onChange={e => setKt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rp')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
-          <div className="text-[13px] text-black/30 pb-2.5">=</div>
-          <div className="flex-1 min-w-0 bg-[#f5ffe0] p-2 text-center rounded">
-            <div className="text-[9px] text-black/40">Vol</div>
+          <div className="text-[13px] text-text/30 pb-2.5">=</div>
+          <div className="flex-1 min-w-0 bg-primary/10 p-2 text-center rounded">
+            <div className="text-[9px] text-text/40">Vol</div>
             <div className="text-base font-bold text-primary-text font-mono">{kubik.toFixed(3)}</div>
-            <div className="text-[9px] text-black/40">m³</div>
+            <div className="text-[9px] text-text/40">m³</div>
           </div>
         </div>
       </div>
 
       <div className="p-3.5">
-        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2.5">Keliling & Luas Dinding</div>
+        <div className="text-[9px] font-semibold text-text/35 uppercase tracking-[1.2px] mb-2.5">Keliling & Luas Dinding</div>
         <div className="flex gap-1.5 mb-2.5">
           <div className="flex-1">
-            <div className="text-[9px] text-black/40 mb-1">P (m)</div>
-            <input id="vol-rp" type="number" value={rp} onChange={e => setRp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rl')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">P (m)</div>
+            <input id="vol-rp" type="number" value={rp} onChange={e => setRp(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rl')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
           <div className="flex-1">
-            <div className="text-[9px] text-black/40 mb-1">L (m)</div>
-            <input id="vol-rl" type="number" value={rl} onChange={e => setRl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rt')?.focus(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">L (m)</div>
+            <input id="vol-rl" type="number" value={rl} onChange={e => setRl(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vol-rt')?.focus(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
           <div className="flex-1">
-            <div className="text-[9px] text-black/40 mb-1">T (m)</div>
-            <input id="vol-rt" type="number" value={rt} onChange={e => setRt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="0" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <div className="text-[9px] text-text/40 mb-1">T (m)</div>
+            <input id="vol-rt" type="number" value={rt} onChange={e => setRt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="0" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-[#f5ffe0] p-2.5 text-center rounded">
-            <div className="text-[9px] text-black/40 mb-0.5">Keliling</div>
+          <div className="bg-primary/10 p-2.5 text-center rounded">
+            <div className="text-[9px] text-text/40 mb-0.5">Keliling</div>
             <div className="text-lg font-bold text-primary-text font-mono">{keliling.toFixed(2)}</div>
-            <div className="text-[9px] text-black/40">m</div>
+            <div className="text-[9px] text-text/40">m</div>
           </div>
-          <div className="bg-[#f5ffe0] p-2.5 text-center rounded">
-            <div className="text-[9px] text-black/40 mb-0.5">Luas Dinding</div>
+          <div className="bg-primary/10 p-2.5 text-center rounded">
+            <div className="text-[9px] text-text/40 mb-0.5">Luas Dinding</div>
             <div className="text-lg font-bold text-primary-text font-mono">{luasDinding.toFixed(2)}</div>
-            <div className="text-[9px] text-black/40">m²</div>
+            <div className="text-[9px] text-text/40">m²</div>
           </div>
         </div>
       </div>
@@ -591,10 +591,10 @@ function BetonTab() {
   }
 
   return (
-    <div className="border border-black/10 rounded-lg overflow-hidden flex flex-col">
-      <div className="p-3.5 border-b border-black/10">
-        <div className="text-[9px] font-semibold text-black/35 uppercase tracking-[1.2px] mb-2">Jenis Campuran</div>
-        <select id="beton-jenis" value={jenis} onChange={e => setJenis(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('beton-vol')?.focus(); } }} className="w-full bg-black/5 border border-black/10 rounded px-2 py-2 text-xs outline-none focus:border-primary mb-3">
+    <div className="border border-border rounded-lg overflow-hidden flex flex-col">
+      <div className="p-3.5 border-b border-border">
+        <div className="text-[9px] font-semibold text-text/35 uppercase tracking-[1.2px] mb-2">Jenis Campuran</div>
+        <select id="beton-jenis" value={jenis} onChange={e => setJenis(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('beton-vol')?.focus(); } }} className="w-full bg-text/5 border border-border rounded px-2 py-2 text-xs outline-none focus:border-primary mb-3">
           <optgroup label="BETON">
             <option value="beton_k100">Beton K-100 (1:3:5)</option>
             <option value="beton_k175">Beton K-175 (1:2:3)</option>
@@ -608,12 +608,12 @@ function BetonTab() {
             <option value="mortar_16">Mortar 1:6</option>
           </optgroup>
         </select>
-        <div className="text-[9px] text-black/40 mb-1">Volume (m³)</div>
-        <input id="beton-vol" type="number" value={vol} onChange={e => setVol(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="2.5" className="w-full bg-black/5 border border-black/10 rounded px-2 py-2 text-xs outline-none focus:border-primary" />
+        <div className="text-[9px] text-text/40 mb-1">Volume (m³)</div>
+        <input id="beton-vol" type="number" value={vol} onChange={e => setVol(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} placeholder="2.5" className="w-full bg-text/5 border border-border rounded px-2 py-2 text-xs outline-none focus:border-primary" />
       </div>
       
       {r && (
-        <div className="px-3.5 py-2.5 text-[10px] text-black/40">
+        <div className="px-3.5 py-2.5 text-[10px] text-text/40">
           <b>{r.nama}</b><br/>
           Rasio: {r.semen} Semen : {r.pasir} Pasir{r.kerikil ? ` : ${r.kerikil} Kerikil` : ''}
         </div>
@@ -621,19 +621,19 @@ function BetonTab() {
 
       {hasil && (
         <div>
-          <div className="px-3.5 py-2 bg-[#aaee0014] border-y border-black/5">
-            <div className="text-[9px] font-semibold text-black/40 uppercase tracking-[1px]">Kebutuhan Material</div>
+          <div className="px-3.5 py-2 bg-primary/10 border-y border-border">
+            <div className="text-[9px] font-semibold text-text/40 uppercase tracking-[1px]">Kebutuhan Material</div>
           </div>
           {hasil.map((row, i) => (
-            <div key={i} className={`flex justify-between items-center px-3.5 py-2.5 ${i < hasil.length - 1 ? 'border-b border-black/5' : ''}`}>
-              <span className="text-xs text-[#1a1a1a]">{row.label}</span>
+            <div key={i} className={`flex justify-between items-center px-3.5 py-2.5 ${i < hasil.length - 1 ? 'border-b border-border' : ''}`}>
+              <span className="text-xs text-text">{row.label}</span>
               <div className="text-right">
                 <div className="text-sm font-bold text-primary-text font-mono">{row.val}</div>
-                {row.sub && <div className="text-[9px] text-black/40">{row.sub}</div>}
+                {row.sub && <div className="text-[9px] text-text/40">{row.sub}</div>}
               </div>
             </div>
           ))}
-          <div className="px-3.5 py-2 text-[9px] text-black/35 border-t border-black/5">
+          <div className="px-3.5 py-2 text-[9px] text-text/35 border-t border-border">
             *Faktor susut 30% sudah termasuk. Volume bersih: {v.toFixed(2)} m³
           </div>
         </div>
@@ -836,134 +836,134 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
       {/* Actions */}
       <div className="flex gap-2">
         <button onClick={handleSave} className="flex-1 bg-primary/20 text-primary-dark font-medium text-xs py-2 rounded-lg hover:bg-primary/30 transition-colors">Simpan Perhitungan</button>
-        <button onClick={() => setIsHistoryOpen(true)} className="flex-1 bg-black/5 text-[#1a1a1a] font-medium text-xs py-2 rounded-lg hover:bg-black/10 transition-colors">List Elemen ({historyList.length})</button>
+        <button onClick={() => setIsHistoryOpen(true)} className="flex-1 bg-text/5 text-text font-medium text-xs py-2 rounded-lg hover:bg-text/10 transition-colors">List Elemen ({historyList.length})</button>
       </div>
 
       {/* Inputs Section */}
-      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
+      <div className="border border-border rounded-lg p-3.5 flex flex-col gap-3">
         <div className="flex gap-2">
           <div className="flex-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Tipe Elemen</label>
-            <select value={tipe} onChange={e => setTipe(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary">
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Tipe Elemen</label>
+            <select value={tipe} onChange={e => setTipe(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary">
               <option>Slof</option>
               <option>Kolom</option>
               <option>Balok</option>
             </select>
           </div>
           <div className="flex-1">
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Mutu Beton</label>
-            <input value={mutuBeton} onChange={e => setMutuBeton(e.target.value)} placeholder="fc 20" className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Mutu Beton</label>
+            <input value={mutuBeton} onChange={e => setMutuBeton(e.target.value)} placeholder="fc 20" className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Lebar (b) mm</label>
-            <input type="number" value={b} onChange={e => setB(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Lebar (b) mm</label>
+            <input type="number" value={b} onChange={e => setB(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
           <div>
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Tinggi (h) mm</label>
-            <input type="number" value={h} onChange={e => setH(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Tinggi (h) mm</label>
+            <input type="number" value={h} onChange={e => setH(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
           <div>
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Panjang (L) m</label>
-            <input type="number" value={L} onChange={e => setL(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Panjang (L) m</label>
+            <input type="number" value={L} onChange={e => setL(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[9px] text-black/40 uppercase tracking-[1px] mb-1 block">Selimut Beton (mm)</label>
-            <input type="number" value={cover} onChange={e => setCover(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+            <label className="text-[9px] text-text/40 uppercase tracking-[1px] mb-1 block">Selimut Beton (mm)</label>
+            <input type="number" value={cover} onChange={e => setCover(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
           </div>
         </div>
       </div>
 
       {/* Tulangan Utama */}
-      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-4">
-        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px]">Tulangan Utama</div>
+      <div className="border border-border rounded-lg p-3.5 flex flex-col gap-4">
+        <div className="text-[10px] font-bold text-text/60 uppercase tracking-[1px]">Tulangan Utama</div>
         
         {/* Atas */}
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-medium text-black/60">Atas</div>
+          <div className="text-xs font-medium text-text/60">Atas</div>
           <div className="flex items-center gap-2">
-            <input type="number" value={top1Count} onChange={e => setTop1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setTop1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{top1Type}</button>
-            <input type="number" value={top1Dia} onChange={e => setTop1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
+            <input type="number" value={top1Count} onChange={e => setTop1Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setTop1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{top1Type}</button>
+            <input type="number" value={top1Dia} onChange={e => setTop1Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
-            <input type="number" value={top2Count} onChange={e => setTop2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setTop2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{top2Type}</button>
-            <input type="number" value={top2Dia} onChange={e => setTop2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
+            <input type="number" value={top2Count} onChange={e => setTop2Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setTop2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{top2Type}</button>
+            <input type="number" value={top2Dia} onChange={e => setTop2Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
 
         {/* Pinggang */}
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-medium text-black/60">Pinggang</div>
+          <div className="text-xs font-medium text-text/60">Pinggang</div>
           <div className="flex items-center gap-2">
-            <input type="number" value={waist1Count} onChange={e => setWaist1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setWaist1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{waist1Type}</button>
-            <input type="number" value={waist1Dia} onChange={e => setWaist1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
+            <input type="number" value={waist1Count} onChange={e => setWaist1Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setWaist1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{waist1Type}</button>
+            <input type="number" value={waist1Dia} onChange={e => setWaist1Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
-            <input type="number" value={waist2Count} onChange={e => setWaist2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setWaist2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{waist2Type}</button>
-            <input type="number" value={waist2Dia} onChange={e => setWaist2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
+            <input type="number" value={waist2Count} onChange={e => setWaist2Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setWaist2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{waist2Type}</button>
+            <input type="number" value={waist2Dia} onChange={e => setWaist2Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
 
         {/* Bawah */}
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-medium text-black/60">Bawah</div>
+          <div className="text-xs font-medium text-text/60">Bawah</div>
           <div className="flex items-center gap-2">
-            <input type="number" value={bot1Count} onChange={e => setBot1Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setBot1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{bot1Type}</button>
-            <input type="number" value={bot1Dia} onChange={e => setBot1Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
+            <input type="number" value={bot1Count} onChange={e => setBot1Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setBot1Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{bot1Type}</button>
+            <input type="number" value={bot1Dia} onChange={e => setBot1Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia (mm)" />
           </div>
           <div className="flex items-center gap-2">
-            <input type="number" value={bot2Count} onChange={e => setBot2Count(e.target.value)} className="w-16 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
-            <span className="text-[10px] text-black/40">btg</span>
-            <button onClick={() => setBot2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{bot2Type}</button>
-            <input type="number" value={bot2Dia} onChange={e => setBot2Dia(e.target.value)} className="flex-1 bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
+            <input type="number" value={bot2Count} onChange={e => setBot2Count(e.target.value)} className="w-16 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary text-center" placeholder="Jml" />
+            <span className="text-[10px] text-text/40">btg</span>
+            <button onClick={() => setBot2Type(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark ml-1 w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{bot2Type}</button>
+            <input type="number" value={bot2Dia} onChange={e => setBot2Dia(e.target.value)} className="flex-1 bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" placeholder="Dia Ekstra (mm)" />
           </div>
         </div>
       </div>
 
       {/* Begel */}
-      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col gap-3">
-        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px]">Begel / Sengkang</div>
+      <div className="border border-border rounded-lg p-3.5 flex flex-col gap-3">
+        <div className="text-[10px] font-bold text-text/60 uppercase tracking-[1px]">Begel / Sengkang</div>
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Diameter (mm)</label>
+            <label className="text-[9px] text-text/40 mb-1 block">Diameter (mm)</label>
             <div className="flex items-center gap-1">
-              <button onClick={() => setBegelType(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark w-6 h-6 flex items-center justify-center rounded hover:bg-black/5 transition-colors">{begelType}</button>
-              <input type="number" value={begelDia} onChange={e => setBegelDia(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
+              <button onClick={() => setBegelType(t => t === 'D' ? 'Ø' : 'D')} className="font-bold text-primary-dark w-6 h-6 flex items-center justify-center rounded hover:bg-text/5 transition-colors">{begelType}</button>
+              <input type="number" value={begelDia} onChange={e => setBegelDia(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary" />
             </div>
           </div>
           <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Jrk Tumpuan (mm)</label>
-            <input type="number" value={jarakTumpuan} onChange={e => setJarakTumpuan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
+            <label className="text-[9px] text-text/40 mb-1 block">Jrk Tumpuan (mm)</label>
+            <input type="number" value={jarakTumpuan} onChange={e => setJarakTumpuan(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
           </div>
           <div>
-            <label className="text-[9px] text-black/40 mb-1 block">Jrk Lapangan (mm)</label>
-            <input type="number" value={jarakLapangan} onChange={e => setJarakLapangan(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
+            <label className="text-[9px] text-text/40 mb-1 block">Jrk Lapangan (mm)</label>
+            <input type="number" value={jarakLapangan} onChange={e => setJarakLapangan(e.target.value)} className="w-full bg-text/5 border border-border rounded px-2 py-1.5 text-xs outline-none focus:border-primary mt-1" />
           </div>
         </div>
-        <div className="text-[9px] text-black/40 mt-1">
+        <div className="text-[9px] text-text/40 mt-1">
           *Tumpuan dihitung 1/4 bentang di kedua ujung (total 1/2 L). Lapangan di tengah (1/2 L).
         </div>
       </div>
 
       {/* Sketch */}
-      <div className="border border-black/10 rounded-lg p-3.5 flex flex-col items-center bg-black/[0.02]">
-        <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px] mb-4 w-full text-left">Sketsa Penampang</div>
-        <svg width={svgW} height={svgH} className="bg-white border border-black/10 rounded shadow-sm">
+      <div className="border border-border rounded-lg p-3.5 flex flex-col items-center bg-text/[0.02]">
+        <div className="text-[10px] font-bold text-text/60 uppercase tracking-[1px] mb-4 w-full text-left">Sketsa Penampang</div>
+        <svg width={svgW} height={svgH} className="bg-card border border-border rounded shadow-sm">
           {/* Concrete */}
           <rect x={startX} y={startY} width={rectW} height={rectH} fill="#e5e7eb" stroke="#9ca3af" strokeWidth="2" />
           {/* Stirrup */}
@@ -1012,25 +1012,25 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
       </div>
 
       {/* Results */}
-      <div className="border border-black/10 rounded-lg overflow-hidden">
-        <div className="bg-[#f5ffe0] p-3.5 border-b border-black/10">
-          <div className="text-[10px] font-bold text-black/60 uppercase tracking-[1px] mb-1">Total Kebutuhan Besi</div>
+      <div className="border border-border rounded-lg overflow-hidden">
+        <div className="bg-primary/10 p-3.5 border-b border-border">
+          <div className="text-[10px] font-bold text-text/60 uppercase tracking-[1px] mb-1">Total Kebutuhan Besi</div>
           <div className="text-2xl font-bold text-primary-text font-mono">{totalWeight.toFixed(2)} <span className="text-sm font-normal">kg</span></div>
         </div>
         <div className="p-3.5 flex flex-col gap-2">
           {Object.entries(rebarSummary).map(([dia, data]) => {
             const bars = Math.ceil(data.len / 12);
             return (
-              <div key={dia} className="flex justify-between items-center border-b border-black/5 pb-2 last:border-0 last:pb-0">
+              <div key={dia} className="flex justify-between items-center border-b border-border pb-2 last:border-0 last:pb-0">
                 <div className="font-bold text-sm">{dia}</div>
                 <div className="text-right">
-                  <div className="text-xs font-bold text-[#1a1a1a]">{bars} batang <span className="text-[10px] font-normal text-black/50">(12m)</span></div>
-                  <div className="text-[10px] text-black/50">{data.weight.toFixed(2)} kg • {data.len.toFixed(2)} m</div>
+                  <div className="text-xs font-bold text-text">{bars} batang <span className="text-[10px] font-normal text-text/50">(12m)</span></div>
+                  <div className="text-[10px] text-text/50">{data.weight.toFixed(2)} kg • {data.len.toFixed(2)} m</div>
                 </div>
               </div>
             );
           })}
-          <div className="mt-2 text-[9px] text-black/40">
+          <div className="mt-2 text-[9px] text-text/40">
             *Estimasi berat menggunakan rumus 0.006165 × d². Panjang batang standar 12m. Sudah termasuk estimasi panjang kait/jangkar.
           </div>
         </div>
@@ -1039,18 +1039,18 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
       <Overlay isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} title="List Elemen Tersimpan">
         <div className="flex flex-col gap-3 pb-6">
           {historyList.length === 0 ? (
-            <div className="text-xs text-black/40 text-center py-6">Belum ada elemen tersimpan.</div>
+            <div className="text-xs text-text/40 text-center py-6">Belum ada elemen tersimpan.</div>
           ) : (
             historyList.map((calc: any) => (
-              <div key={calc.id} onClick={() => handleLoad(calc)} className="bg-white border border-black/10 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:bg-black/5 transition-colors shadow-sm">
+              <div key={calc.id} onClick={() => handleLoad(calc)} className="bg-card border border-border rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:bg-text/5 transition-colors shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-sm font-bold text-[#1a1a1a]">{calc.name}</div>
-                    <div className="text-[10px] text-black/40 mt-0.5">
+                    <div className="text-sm font-bold text-text">{calc.name}</div>
+                    <div className="text-[10px] text-text/40 mt-0.5">
                       {new Date(calc.date).toLocaleDateString('id-ID')} • {calc.form.tipe} ({calc.form.b}x{calc.form.h} mm) • L: {calc.form.L}m
                     </div>
                   </div>
-                  <button onClick={(e) => handleDeleteHistory(calc.id, e)} className="text-black/20 hover:text-red-500 p-1 -mr-1 -mt-1"><Trash2 size={16} /></button>
+                  <button onClick={(e) => handleDeleteHistory(calc.id, e)} className="text-text/20 hover:text-red-500 p-1 -mr-1 -mt-1"><Trash2 size={16} /></button>
                 </div>
                 
                 {calc.rebarSummary && (
@@ -1058,21 +1058,21 @@ function IronCalcTab({ locData, updateLocData, locId }: { locData: LocData, upda
                     <div className="text-[9px] font-bold text-primary-dark/60 uppercase tracking-wider mb-0.5">Rincian Kebutuhan Besi:</div>
                     {Object.entries(calc.rebarSummary).map(([dia, data]: [string, any]) => (
                       <div key={dia} className="flex justify-between items-center text-[11px]">
-                        <span className="font-bold text-[#1a1a1a]">{dia}</span>
+                        <span className="font-bold text-text">{dia}</span>
                         <div className="text-right">
                           <span className="font-bold text-primary-dark">{Math.ceil(data.len / 12)} btg</span>
-                          <span className="text-black/40 ml-1">({data.weight.toFixed(1)} kg)</span>
+                          <span className="text-text/40 ml-1">({data.weight.toFixed(1)} kg)</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
                 
-                <div className="flex justify-between items-center mt-1 pt-2 border-t border-black/5">
-                  <span className="text-[10px] font-bold text-black/40 uppercase tracking-wider">Total Keseluruhan</span>
+                <div className="flex justify-between items-center mt-1 pt-2 border-t border-border">
+                  <span className="text-[10px] font-bold text-text/40 uppercase tracking-wider">Total Keseluruhan</span>
                   <div className="text-right">
                     <span className="text-sm font-black text-primary-dark">{calc.totalBars ? `${calc.totalBars} btg` : '-'}</span>
-                    <span className="text-[10px] font-bold text-black/40 ml-1.5">({calc.totalWeight.toFixed(1)} kg)</span>
+                    <span className="text-[10px] font-bold text-text/40 ml-1.5">({calc.totalWeight.toFixed(1)} kg)</span>
                   </div>
                 </div>
               </div>
@@ -1263,7 +1263,7 @@ JIKA BERHASIL DIHITUNG:
       case 'orange': return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'purple': return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'red': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      default: return 'bg-text/5 text-text/80 border-border';
     }
   };
 
@@ -1278,19 +1278,19 @@ JIKA BERHASIL DIHITUNG:
 
   return (
     <div className="flex flex-col gap-4 pb-10">
-      <div className={`bg-white p-4 rounded-xl border border-black/5 shadow-sm flex flex-col gap-4 transition-opacity ${aiQuestion ? 'opacity-50 pointer-events-none' : ''}`}>
-        <div className="flex items-center gap-3 border-b border-black/5 pb-3">
-          <div className="bg-primary text-white p-2 rounded-lg">
+      <div className={`bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col gap-4 transition-opacity ${aiQuestion ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="flex items-center gap-3 border-b border-border pb-3">
+          <div className="bg-primary text-primary-text p-2 rounded-lg">
             <Sparkles size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-[#1a1a1a]">AI Material Planner</h3>
-            <p className="text-xs text-black/60">Isi form untuk menghitung material</p>
+            <h3 className="font-bold text-text">AI Material Planner</h3>
+            <p className="text-xs text-text/60">Isi form untuk menghitung material</p>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-black/60 mb-2">Tipe Perhitungan</label>
+          <label className="block text-xs font-bold text-text/60 mb-2">Tipe Perhitungan</label>
           <div className="flex gap-2">
             {(['M1', 'M2', 'M3'] as const).map(type => (
               <button
@@ -1299,7 +1299,7 @@ JIKA BERHASIL DIHITUNG:
                 className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-colors ${
                   calcType === type
                     ? 'bg-primary/10 border-primary text-primary-dark'
-                    : 'bg-white border-black/10 text-black/40 hover:border-black/20'
+                    : 'bg-card border-border text-text/40 hover:border-border'
                 }`}
               >
                 {type} {type === 'M1' ? '(Panjang)' : type === 'M2' ? '(Luas)' : '(Volume)'}
@@ -1313,7 +1313,7 @@ JIKA BERHASIL DIHITUNG:
             <button
               onClick={() => setInputMode('dimensi')}
               className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${
-                inputMode === 'dimensi' ? 'bg-black/10 text-black' : 'bg-transparent text-black/40 hover:bg-black/5'
+                inputMode === 'dimensi' ? 'bg-text/10 text-text' : 'bg-transparent text-text/40 hover:bg-text/5'
               }`}
             >
               Input Dimensi
@@ -1321,7 +1321,7 @@ JIKA BERHASIL DIHITUNG:
             <button
               onClick={() => setInputMode('total')}
               className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${
-                inputMode === 'total' ? 'bg-black/10 text-black' : 'bg-transparent text-black/40 hover:bg-black/5'
+                inputMode === 'total' ? 'bg-text/10 text-text' : 'bg-transparent text-text/40 hover:bg-text/5'
               }`}
             >
               Input Total
@@ -1329,43 +1329,49 @@ JIKA BERHASIL DIHITUNG:
           </div>
 
           {inputMode === 'dimensi' ? (
-            <div className="border border-black/10 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
               <table className="w-full text-left text-sm">
-                <thead className="bg-black/5 text-[10px] uppercase text-black/40">
+                <thead className="bg-text/5 text-[10px] uppercase text-text/40">
                   <tr>
-                    <th className="p-2 font-bold border-b border-black/5">Panjang (m)</th>
-                    {calcType !== 'M1' && <th className="p-2 font-bold border-b border-black/5 border-l">Lebar (m)</th>}
-                    {calcType === 'M3' && <th className="p-2 font-bold border-b border-black/5 border-l">Tinggi (m)</th>}
+                    <th className="p-2 font-bold border-b border-border">Panjang (m)</th>
+                    {calcType !== 'M1' && <th className="p-2 font-bold border-b border-border border-l">Lebar (m)</th>}
+                    {calcType === 'M3' && <th className="p-2 font-bold border-b border-border border-l">Tinggi (m)</th>}
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="p-0">
                       <input
+                        id="ai-calc-length"
                         type="number"
                         value={length}
                         onChange={e => setLength(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('ai-calc-width')?.focus() || document.getElementById('ai-calc-material')?.focus(); } }}
                         className="w-full bg-transparent border-none px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                         placeholder="0"
                       />
                     </td>
                     {calcType !== 'M1' && (
-                      <td className="p-0 border-l border-black/5">
+                      <td className="p-0 border-l border-border">
                         <input
+                          id="ai-calc-width"
                           type="number"
                           value={width}
                           onChange={e => setWidth(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('ai-calc-height')?.focus() || document.getElementById('ai-calc-material')?.focus(); } }}
                           className="w-full bg-transparent border-none px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                           placeholder="0"
                         />
                       </td>
                     )}
                     {calcType === 'M3' && (
-                      <td className="p-0 border-l border-black/5">
+                      <td className="p-0 border-l border-border">
                         <input
+                          id="ai-calc-height"
                           type="number"
                           value={height}
                           onChange={e => setHeight(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('ai-calc-material')?.focus(); } }}
                           className="w-full bg-transparent border-none px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                           placeholder="0"
                         />
@@ -1377,12 +1383,13 @@ JIKA BERHASIL DIHITUNG:
             </div>
           ) : (
             <div>
-              <label className="block text-[10px] font-bold text-black/40 uppercase mb-1">Total Volume ({calcType})</label>
+              <label className="block text-[10px] font-bold text-text/40 uppercase mb-1">Total Volume ({calcType})</label>
               <input
                 type="number"
                 value={totalValue}
                 onChange={e => setTotalValue(e.target.value)}
-                className="w-full bg-black/5 border-none rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('ai-calc-material')?.focus(); } }}
+                className="w-full bg-text/5 border-none rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                 placeholder="0"
               />
             </div>
@@ -1390,12 +1397,14 @@ JIKA BERHASIL DIHITUNG:
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-black/60 mb-1">Material yang Dihitung</label>
+          <label className="block text-xs font-bold text-text/60 mb-1">Material yang Dihitung</label>
           <input
+            id="ai-calc-material"
             type="text"
             value={material}
             onChange={e => setMaterial(e.target.value)}
-            className="w-full bg-black/5 border-none rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); !isCalculateDisabled && handleCalculate(false); } }}
+            className="w-full bg-text/5 border-none rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
             placeholder="Contoh: Keramik, Bata Merah, Cat Dinding..."
           />
         </div>
@@ -1403,7 +1412,7 @@ JIKA BERHASIL DIHITUNG:
         <button
           onClick={() => handleCalculate(false)}
           disabled={isCalculateDisabled}
-          className="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity mt-2"
+          className="w-full bg-primary text-primary-text font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity mt-2"
         >
           {isLoading && !aiQuestion ? (
             <>
@@ -1426,16 +1435,16 @@ JIKA BERHASIL DIHITUNG:
               <Sparkles size={16} />
               AI Butuh Detail Tambahan
             </div>
-            <button onClick={handleCancelQuestion} className="text-black/40 hover:text-black/60">
+            <button onClick={handleCancelQuestion} className="text-text/40 hover:text-text/60">
               <X size={16} />
             </button>
           </div>
-          <p className="text-sm text-black/70">{aiQuestion}</p>
+          <p className="text-sm text-text/70">{aiQuestion}</p>
           
           {aiOptions && aiOptions.length > 0 && (
             <div className="flex flex-col gap-2 my-1">
               {aiOptions.map((opt, i) => (
-                <label key={i} className="flex items-center gap-3 p-2 rounded-lg border border-black/10 bg-white cursor-pointer hover:border-primary/50 transition-colors">
+                <label key={i} className="flex items-center gap-3 p-2 rounded-lg border border-border bg-card cursor-pointer hover:border-primary/50 transition-colors">
                   <input
                     type="radio"
                     name="aiOption"
@@ -1444,7 +1453,7 @@ JIKA BERHASIL DIHITUNG:
                     onChange={() => setAiAnswer(opt)}
                     className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
                   />
-                  <span className="text-sm text-black/80">{opt}</span>
+                  <span className="text-sm text-text/80">{opt}</span>
                 </label>
               ))}
             </div>
@@ -1458,14 +1467,14 @@ JIKA BERHASIL DIHITUNG:
               onKeyDown={e => {
                 if (e.key === 'Enter') handleCalculate(true);
               }}
-              className="flex-1 bg-white border border-black/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="flex-1 bg-card border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder={aiOptions && aiOptions.length > 0 ? "Atau ketik jawaban lain..." : "Ketik jawaban Anda..."}
               autoFocus={!aiOptions || aiOptions.length === 0}
             />
             <button
               onClick={() => handleCalculate(true)}
               disabled={isLoading || !aiAnswer.trim()}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm disabled:opacity-50 flex items-center gap-2"
+              className="bg-primary text-primary-text px-4 py-2 rounded-lg font-bold text-sm disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Kirim'}
             </button>
@@ -1481,24 +1490,24 @@ JIKA BERHASIL DIHITUNG:
 
       {history.length > 0 && (
         <div className="flex flex-col gap-3 mt-2">
-          <h4 className="font-bold text-sm text-black/60 px-1">Riwayat Perhitungan</h4>
+          <h4 className="font-bold text-sm text-text/60 px-1">Riwayat Perhitungan</h4>
           {history.map(item => (
-            <div key={item.id} className="bg-white border border-black/5 rounded-xl shadow-sm overflow-hidden">
+            <div key={item.id} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
               <div 
-                className="p-3 bg-gray-50/50 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-3 bg-text/5 flex justify-between items-center cursor-pointer hover:bg-text/10 transition-colors"
                 onClick={() => toggleExpand(item.id)}
               >
                 <div>
-                  <div className="font-bold text-sm text-[#1a1a1a]">{item.material}</div>
-                  <div className="text-[10px] text-black/40 mt-0.5">{item.dimensions}</div>
+                  <div className="font-bold text-sm text-text">{item.material}</div>
+                  <div className="text-[10px] text-text/40 mt-0.5">{item.dimensions}</div>
                 </div>
-                <div className="text-black/40">
+                <div className="text-text/40">
                   {item.expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </div>
               </div>
               
               {item.expanded && (
-                <div className="p-4 border-t border-black/5">
+                <div className="p-4 border-t border-border">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {item.tags.map((tag, i) => (
                       <div key={i} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border ${getColorClass(tag.color)} flex items-center gap-1.5`}>
@@ -1509,9 +1518,9 @@ JIKA BERHASIL DIHITUNG:
                   </div>
                   
                   {item.suggestions && item.suggestions.length > 0 && (
-                    <div className="bg-black/5 rounded-lg p-3">
-                      <div className="text-[10px] font-bold text-black/40 uppercase mb-2">Saran AI</div>
-                      <ul className="list-disc pl-4 space-y-1.5 text-xs text-black/70">
+                    <div className="bg-text/5 rounded-lg p-3">
+                      <div className="text-[10px] font-bold text-text/40 uppercase mb-2">Saran AI</div>
+                      <ul className="list-disc pl-4 space-y-1.5 text-xs text-text/70">
                         {item.suggestions.map((s, i) => <li key={i}>{s}</li>)}
                       </ul>
                     </div>

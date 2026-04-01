@@ -39,6 +39,7 @@ export interface AppState {
   locData: Record<string, LocData>;
   globalCatatan?: any[];
   globalLinks?: any[];
+  theme?: string;
 }
 
 export const defaultState: AppState = {
@@ -47,5 +48,6 @@ export const defaultState: AppState = {
   activeLoc: null,
   locData: {},
   globalCatatan: [],
-  globalLinks: []
+  globalLinks: [],
+  theme: 'default'
 };

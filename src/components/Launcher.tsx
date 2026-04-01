@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, FileText, Package, Wallet, Menu, Link as LinkIcon, Sparkles, MapPin, X } from 'lucide-react';
+import { Camera, FileText, Package, Wallet, Menu, Link as LinkIcon, Sparkles, MapPin, X, Settings } from 'lucide-react';
 import { AppState, LocData } from '../types';
 import Overlay from './Overlay';
 import { capitalizeWords } from '../utils';
@@ -102,17 +102,17 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
     <div className="flex flex-col px-5 pt-8 pb-[80px] max-w-[480px] mx-auto w-full h-full overflow-y-auto hide-scrollbar">
       {/* Date Block */}
       <div className="shrink-0 mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[340px] mx-auto">
-        <div className="font-condensed text-[64px] tracking-tight font-extrabold text-[#1a1a1a] leading-none uppercase m-0">
+        <div className="font-condensed text-[64px] tracking-tight font-extrabold text-text leading-none uppercase m-0">
           {MONTHS[time.getMonth()]}
         </div>
         <div className="flex items-center justify-between gap-1.5 mt-0.5">
-          <div className="text-[11px] text-black/40 uppercase tracking-[1.5px] font-medium whitespace-nowrap">
+          <div className="text-[11px] text-text/40 uppercase tracking-[1.5px] font-medium whitespace-nowrap">
             {DAYS[time.getDay()]},
           </div>
-          <div className="font-mono text-[10px] text-black/30 tracking-wide whitespace-nowrap">
+          <div className="font-mono text-[10px] text-text/30 tracking-wide whitespace-nowrap">
             {String(time.getDate()).padStart(2, '0')} / {time.getFullYear()}
           </div>
-          <div className="font-mono text-[10px] text-black/30 whitespace-nowrap ml-auto">
+          <div className="font-mono text-[10px] text-text/30 whitespace-nowrap ml-auto">
             {String(time.getHours()).padStart(2, '0')}:{String(time.getMinutes()).padStart(2, '0')}
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
 
       {/* Photo Section */}
       <div className="flex-1 w-full max-w-[340px] mx-auto relative mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700 min-h-[240px] max-h-[360px]">
-        <label className="absolute inset-0 w-full h-full bg-[#f0f0f0] overflow-hidden flex items-center justify-center cursor-pointer active:scale-[0.995] transition-transform border border-black/5 shadow-sm">
+        <label className="absolute inset-0 w-full h-full bg-card overflow-hidden flex items-center justify-center cursor-pointer active:scale-[0.995] transition-transform border border-border shadow-sm">
           {coverPhoto ? (
             <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover absolute inset-0 z-10" referrerPolicy="no-referrer" />
           ) : (
@@ -147,19 +147,19 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
             <button
               key={app.id}
               onClick={() => onOpenPage(app.id)}
-              className="w-[50px] h-[50px] rounded-[15px] flex items-center justify-center cursor-pointer border-[1.5px] border-black/10 bg-white relative transition-all active:scale-[0.88] hover:border-black/25"
+              className="w-[50px] h-[50px] rounded-[15px] flex items-center justify-center cursor-pointer border-[1.5px] border-border bg-card relative transition-all active:scale-[0.88] hover:border-text/25"
             >
-              <app.icon size={22} strokeWidth={1.5} className="text-[#1a1a1a]" />
+              <app.icon size={22} strokeWidth={1.5} className="text-text" />
             </button>
           ))}
         </div>
 
         <button
           onClick={() => setIsLocOpen(true)}
-          className="flex items-center gap-2 bg-black/5 border border-black/10 rounded-full px-3.5 py-2 cursor-pointer transition-colors active:bg-black/10 mb-2.5 w-full"
+          className="flex items-center gap-2 bg-text/5 border border-border rounded-full px-3.5 py-2 cursor-pointer transition-colors active:bg-text/10 mb-2.5 w-full"
         >
           <MapPin size={14} className="text-primary-dark opacity-80 shrink-0" />
-          <div className="flex-1 text-[11px] text-black/45 tracking-wide whitespace-nowrap overflow-hidden text-ellipsis text-left">
+          <div className="flex-1 text-[11px] text-text/45 tracking-wide whitespace-nowrap overflow-hidden text-ellipsis text-left">
             {activeLocName}
           </div>
           <div className="w-1.5 h-1.5 rounded-full bg-primary-dark relative shrink-0">
@@ -167,29 +167,37 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
           </div>
         </button>
 
-        <button
-          onClick={() => setIsProfOpen(true)}
-          className="flex items-center gap-2 cursor-pointer py-0.5 w-full text-left"
-        >
-          <div className="w-[30px] h-[30px] rounded-full bg-[#e8f5c8] border-[1.5px] border-[#78c80080] flex items-center justify-center text-[10px] font-medium text-[#4a8800] overflow-hidden font-mono shrink-0">
-            {state.profile.avatar ? (
-              <img src={state.profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span>{getInitials(state.profile.name)}</span>
-            )}
-          </div>
-          <div className="bg-black/5 border-l-2 border-primary rounded-r px-2 py-0.5 flex-1">
-            <div className="text-[10px] font-medium text-black/75 tracking-wide truncate">{state.profile.name}</div>
-            <div className="text-[8px] text-black/40 uppercase tracking-[1.2px] truncate">{state.profile.role}</div>
-          </div>
-        </button>
+        <div className="flex items-center gap-2 w-full">
+          <button
+            onClick={() => setIsProfOpen(true)}
+            className="flex items-center gap-2 cursor-pointer py-0.5 flex-1 text-left"
+          >
+            <div className="w-[30px] h-[30px] rounded-full bg-primary/10 border-[1.5px] border-primary/50 flex items-center justify-center text-[10px] font-medium text-primary-dark overflow-hidden font-mono shrink-0">
+              {state.profile.avatar ? (
+                <img src={state.profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span>{getInitials(state.profile.name)}</span>
+              )}
+            </div>
+            <div className="bg-text/5 border-l-2 border-primary rounded-r px-2 py-0.5 flex-1">
+              <div className="text-[10px] font-medium text-text/75 tracking-wide truncate">{state.profile.name}</div>
+              <div className="text-[8px] text-text/40 uppercase tracking-[1.2px] truncate">{state.profile.role}</div>
+            </div>
+          </button>
+          <button
+            onClick={() => onOpenPage('theme')}
+            className="w-[34px] h-[34px] rounded-full bg-text/5 border border-border flex items-center justify-center shrink-0 hover:bg-text/10 transition-colors"
+          >
+            <Settings size={16} className="text-text/60" />
+          </button>
+        </div>
       </div>
 
       {/* Location Overlay */}
       <Overlay isOpen={isLocOpen} onClose={() => setIsLocOpen(false)} title="Lokasi Proyek">
         <div className="flex flex-col gap-1.5 mb-3">
           {state.locations.length === 0 ? (
-            <div className="text-[11px] text-black/30 text-center py-4">Belum ada lokasi.</div>
+            <div className="text-[11px] text-text/30 text-center py-4">Belum ada lokasi.</div>
           ) : (
             state.locations.map(l => {
               const ld = getLocData(l.id);
@@ -199,11 +207,11 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
                 <div
                   key={l.id}
                   onClick={() => { updateState(p => ({ ...p, activeLoc: l.id })); setIsLocOpen(false); }}
-                  className={`flex items-center gap-2 px-3 py-2.5 border rounded-[10px] cursor-pointer transition-colors ${isActive ? 'border-primary bg-primary/10' : 'bg-black/5 border-black/10'}`}
+                  className={`flex items-center gap-2 px-3 py-2.5 border rounded-[10px] cursor-pointer transition-colors ${isActive ? 'border-primary bg-primary/10' : 'bg-text/5 border-border'}`}
                 >
                   <MapPin size={12} className="text-primary-dark opacity-80 shrink-0" />
-                  <div className="flex-1 text-xs text-black/75 truncate">{l.name}</div>
-                  {cnt > 0 && <span className="text-[8px] text-[#4a8800] bg-[#78c8001f] px-2 py-0.5 rounded-full font-mono">{cnt}</span>}
+                  <div className="flex-1 text-xs text-text/75 truncate">{l.name}</div>
+                  {cnt > 0 && <span className="text-[8px] text-primary-dark bg-primary/10 px-2 py-0.5 rounded-full font-mono">{cnt}</span>}
                   <button onClick={(e) => handleDeleteLoc(l.id, e)} className="text-red-500/50 hover:text-red-500 p-1">
                     <X size={12} />
                   </button>
@@ -218,7 +226,7 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
             onChange={e => setNewLocName(capitalizeWords(e.target.value))}
             onKeyDown={e => e.key === 'Enter' && handleAddLoc()}
             placeholder="Nama lokasi proyek..."
-            className="flex-1 bg-black/5 border border-black/10 rounded-[10px] px-3 py-2 text-xs text-[#1a1a1a] outline-none focus:border-primary transition-colors"
+            className="flex-1 bg-text/5 border border-border rounded-[10px] px-3 py-2 text-xs text-text outline-none focus:border-primary transition-colors"
             maxLength={50}
           />
           <button onClick={handleAddLoc} className="bg-primary text-primary-text font-medium text-[11px] px-3.5 py-2 rounded-[10px] whitespace-nowrap">
@@ -230,37 +238,37 @@ export default function Launcher({ state, updateState, getLocData, onOpenPage }:
       {/* Profile Overlay */}
       <Overlay isOpen={isProfOpen} onClose={() => setIsProfOpen(false)} title="Profil">
         <div className="flex items-center gap-3 mb-3.5">
-          <div className="w-[46px] h-[46px] rounded-full bg-[#e8f5c8] border-[1.5px] border-[#78c80066] flex items-center justify-center text-sm font-medium text-[#4a8800] overflow-hidden font-mono shrink-0">
+          <div className="w-[46px] h-[46px] rounded-full bg-primary/10 border-[1.5px] border-primary/40 flex items-center justify-center text-sm font-medium text-primary-dark overflow-hidden font-mono shrink-0">
             {state.profile.avatar ? (
               <img src={state.profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <span>{getInitials(profForm.name || state.profile.name)}</span>
             )}
           </div>
-          <label className="flex-1 bg-black/5 border border-dashed border-black/15 rounded-[10px] p-2 text-[10px] text-black/40 cursor-pointer text-center uppercase tracking-wide">
+          <label className="flex-1 bg-text/5 border border-dashed border-border rounded-[10px] p-2 text-[10px] text-text/40 cursor-pointer text-center uppercase tracking-wide">
             Upload Foto
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </label>
         </div>
         <div className="flex flex-col gap-1.5 mb-3">
-          <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Nama</label>
+          <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Nama</label>
           <input
             value={profForm.name}
             onChange={e => setProfForm({ ...profForm, name: capitalizeWords(e.target.value) })}
             onKeyDown={e => e.key === 'Enter' && document.getElementById('prof-role-input')?.focus()}
             placeholder="Nama lengkap..."
-            className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary transition-colors"
+            className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary transition-colors"
           />
         </div>
         <div className="flex flex-col gap-1.5 mb-4">
-          <label className="text-[9px] text-black/40 uppercase tracking-[1.5px]">Jabatan</label>
+          <label className="text-[9px] text-text/40 uppercase tracking-[1.5px]">Jabatan</label>
           <input
             id="prof-role-input"
             value={profForm.role}
             onChange={e => setProfForm({ ...profForm, role: capitalizeWords(e.target.value) })}
             onKeyDown={e => e.key === 'Enter' && handleSaveProf()}
             placeholder="Jabatan / posisi..."
-            className="bg-black/5 border border-black/10 rounded-[10px] px-3 py-2.5 text-xs text-[#1a1a1a] outline-none focus:border-primary transition-colors"
+            className="bg-text/5 border border-border rounded-[10px] px-3 py-2.5 text-xs text-text outline-none focus:border-primary transition-colors"
           />
         </div>
         <button onClick={handleSaveProf} className="w-full bg-primary text-primary-text font-medium text-xs p-3 rounded-[10px]">

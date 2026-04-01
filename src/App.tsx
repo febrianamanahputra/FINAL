@@ -7,8 +7,10 @@ import DanaPage from './components/pages/DanaPage';
 import ToolsPage from './components/pages/ToolsPage';
 import CatatanPage from './components/pages/CatatanPage';
 import LinkPage from './components/pages/LinkPage';
+import ThemePage from './components/pages/ThemePage';
 import InAppBrowserWarning from './components/InAppBrowserWarning';
 import { motion, AnimatePresence } from 'motion/react';
+import { THEMES } from './themes';
 
 export default function App() {
   const { state, updateState, getLocData, updateLocData } = useAppStore();
@@ -47,6 +49,23 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  useEffect(() => {
+    // Apply theme on load
+    const currentTheme = state.theme || 'default';
+    const theme = THEMES.find(t => t.id === currentTheme);
+    if (theme) {
+      const root = document.documentElement;
+      root.style.setProperty('--color-primary', theme.colors.primary);
+      root.style.setProperty('--color-primary-dark', theme.colors.primaryDark);
+      root.style.setProperty('--color-primary-text', theme.colors.primaryText);
+      root.style.setProperty('--color-bg', theme.colors.bg);
+      root.style.setProperty('--color-text', theme.colors.text);
+      root.style.setProperty('--color-card', theme.colors.card);
+      root.style.setProperty('--color-border', theme.colors.border);
+      root.style.setProperty('--font-sans', theme.font);
+    }
+  }, [state.theme]);
+
   const locData = getLocData(state.activeLoc);
 
   const renderPage = () => {
@@ -63,13 +82,15 @@ export default function App() {
         return <CatatanPage state={state} updateState={updateState} onBack={() => setCurrentPage('launcher')} />;
       case 'link':
         return <LinkPage state={state} locData={locData} updateLocData={updateLocData} updateState={updateState} onBack={() => setCurrentPage('launcher')} />;
+      case 'theme':
+        return <ThemePage onBack={() => setCurrentPage('launcher')} />;
       default:
         return <Launcher state={state} updateState={updateState} getLocData={getLocData} onOpenPage={setCurrentPage} />;
     }
   };
 
   return (
-    <div className="w-full h-full bg-white relative overflow-hidden">
+    <div className="w-full h-full bg-bg relative overflow-hidden">
       <InAppBrowserWarning />
       <AnimatePresence mode="wait">
         <motion.div
@@ -91,20 +112,20 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/40 flex items-center justify-center p-5"
+            className="absolute inset-0 z-[100] bg-text/40 flex items-center justify-center p-5"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-[320px] shadow-xl"
+              className="bg-card rounded-2xl p-6 w-full max-w-[320px] shadow-xl"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Keluar Aplikasi?</h3>
-              <p className="text-sm text-gray-500 mb-6">Apakah Anda yakin ingin keluar dari aplikasi?</p>
+              <h3 className="text-lg font-bold text-text mb-2">Keluar Aplikasi?</h3>
+              <p className="text-sm text-text/60 mb-6">Apakah Anda yakin ingin keluar dari aplikasi?</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowExitConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl font-medium text-sm bg-gray-100 text-gray-700 active:bg-gray-200 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl font-medium text-sm bg-text/5 text-text/80 active:bg-text/10 transition-colors"
                 >
                   Batal
                 </button>
