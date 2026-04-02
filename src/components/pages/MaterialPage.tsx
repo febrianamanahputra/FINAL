@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppState, LocData } from '../../types';
 import PageHeader from '../PageHeader';
-import { Plus, Send, Search, Package, RefreshCw, Trash2, X, Edit3 } from 'lucide-react';
+import { Plus, Send, Search, Package, RefreshCw, Trash2, X, Edit3, Copy } from 'lucide-react';
 import { capitalizeWords } from '../../utils';
 import Overlay from '../Overlay';
 
@@ -266,6 +266,34 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
     setIsDoneOpen(false);
   };
 
+  const handleCopySpreadsheet = (req: any) => {
+    const today = new Date().toLocaleDateString('id-ID');
+    const tglP = req.tglPerlu ? new Date(req.tglPerlu).toLocaleDateString('id-ID') : '';
+    
+    let tsv = '';
+    if (req.items && Array.isArray(req.items)) {
+      req.items.forEach((item: any) => {
+        if (!item.nama) return;
+        const row = [
+          `=N(INDIRECT("A"&(ROW()-1)))+1`, // A
+          today, // B
+          item.nama, // C
+          item.jumlah, // D
+          item.satuan, // E
+          tglP // F
+        ];
+        tsv += row.join('\t') + '\n';
+      });
+    }
+    
+    navigator.clipboard.writeText(tsv).then(() => {
+      alert('Berhasil disalin ke clipboard! Silakan paste di Spreadsheet.');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      alert('Gagal menyalin ke clipboard.');
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Menunggu': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -324,6 +352,9 @@ function TrackingTab({ locData, updateLocData, locId }: { locData: LocData, upda
                     <option value="Selesai">Selesai</option>
                     <option value="Dibatalkan">Dibatalkan</option>
                   </select>
+                  <button onClick={() => handleCopySpreadsheet(req)} className="bg-blue-500 text-white p-1 rounded-md shadow-sm" title="Salin ke Spreadsheet">
+                    <Copy size={14} />
+                  </button>
                   <button onClick={() => handleOpenDone(req)} className="bg-primary text-primary-text font-bold text-[10px] px-2.5 py-1 rounded-md shadow-sm">
                     Done
                   </button>

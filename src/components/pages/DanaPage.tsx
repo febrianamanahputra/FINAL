@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppState, LocData } from '../../types';
 import PageHeader from '../PageHeader';
-import { ChevronLeft, ChevronRight, RefreshCw, Plus, Camera, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, Plus, Camera, Send, Copy, CheckSquare } from 'lucide-react';
 import Overlay from '../Overlay';
 import { capitalizeWords } from '../../utils';
 
@@ -23,9 +23,28 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
   const [editItemIdx, setEditItemIdx] = useState<number | null>(null);
   const [itemForm, setItemForm] = useState({ uraian: '', vol: '', satuan: '', hargaSatuan: '', totalHarga: '' });
 
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [selectedDanaIds, setSelectedDanaIds] = useState<string[]>([]);
+
   const locName = state.locations.find(l => l.id === state.activeLoc)?.name || '—';
 
+  useEffect(() => {
+    const existingDana = locData.dana?.find((d: any) => d.noSeri === noSeri);
+    if (existingDana) {
+      setTanggal(existingDana.tgl);
+      setKlasifikasi(existingDana.klasifikasi);
+      setItems(existingDana.items?.length ? existingDana.items : [{ id: `di_${Date.now()}`, uraian: '', vol: '', satuan: '', hargaSatuan: '', totalHarga: '' }]);
+      setFotoUrl(existingDana.fotoUrl || null);
+    } else {
+      setTanggal(new Date().toISOString().split('T')[0]);
+      setKlasifikasi('Bahan');
+      setItems([{ id: `di_${Date.now()}`, uraian: '', vol: '', satuan: '', hargaSatuan: '', totalHarga: '' }]);
+      setFotoUrl(null);
+    }
+  }, [noSeri]); // intentionally omitting locData.dana to prevent overwriting during sync
+
   const handleNoSeriChange = (delta: number) => {
+
     const newVal = Math.max(1, noSeri + delta);
     setNoSeri(newVal);
     if (state.activeLoc) {
@@ -179,8 +198,9 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
 
     const waText = `*Dana Lapangan — No. ${noSeri}*\n📍 ${locName}\n📅 ${fmtDate(tanggal)}\n🏷️ ${klasifikasi}\n\n${itemLines}\n\n*Total: Rp ${Math.round(total).toLocaleString('id-ID')}*`;
     
+    const existingDana = locData.dana?.find((d: any) => d.noSeri === noSeri);
     const newDana = {
-      id: `dana_${Date.now()}`,
+      id: existingDana ? existingDana.id : `dana_${Date.now()}`,
       noSeri,
       tgl: tanggal,
       klasifikasi,
@@ -190,19 +210,74 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
     };
     
     if (state.activeLoc) {
-      updateLocData(state.activeLoc, prev => ({
-        ...prev,
-        danaNoSeri: noSeri + 1,
-        dana: [newDana, ...(prev.dana || [])]
-      }));
+      updateLocData(state.activeLoc, prev => {
+        const existingIdx = (prev.dana || []).findIndex((d: any) => d.noSeri === noSeri);
+        let newDanaList = [...(prev.dana || [])];
+        if (existingIdx >= 0) {
+          newDanaList[existingIdx] = newDana;
+        } else {
+          newDanaList = [newDana, ...newDanaList];
+        }
+        
+        const nextNoSeri = Math.max(prev.danaNoSeri || 1, noSeri + 1);
+        
+        return {
+          ...prev,
+          danaNoSeri: nextNoSeri,
+          dana: newDanaList
+        };
+      });
     }
     
     setNoSeri(noSeri + 1);
-    setItems([{ id: `di_${Date.now()}`, uraian: '', vol: '', satuan: '', hargaSatuan: '', totalHarga: '' }]);
-    setFotoUrl(null);
-    setKlasifikasi('Bahan');
     
     window.location.href = `whatsapp://send?text=${encodeURIComponent(waText)}`;
+  };
+
+  const handleOpenCopyModal = () => {
+    setSelectedDanaIds([]);
+    setIsCopyModalOpen(true);
+  };
+
+  const handleCopyDana = () => {
+    const selectedDana = locData.dana?.filter((d: any) => selectedDanaIds.includes(d.id)) || [];
+    if (!selectedDana.length) return alert('Pilih minimal 1 dana');
+    
+    let tsv = '';
+    const today = new Date().toLocaleDateString('id-ID');
+    
+    selectedDana.forEach(dana => {
+      dana.items.forEach((item: any) => {
+        const row = [
+          `=N(INDIRECT("A"&(ROW()-1)))+1`, // A
+          today, // B
+          item.uraian, // C
+          '', // D
+          item.uraian, // E
+          dana.klasifikasi, // F
+          '', // G
+          item.vol, // H
+          item.satuan, // I
+          item.hargaSatuan, // J
+          item.totalHarga || (parseFloat(item.vol) * parseFloat(item.hargaSatuan)).toString() // K
+        ];
+        tsv += row.join('\t') + '\n';
+      });
+    });
+    
+    navigator.clipboard.writeText(tsv).then(() => {
+      alert('Berhasil disalin ke clipboard! Silakan paste di Spreadsheet.');
+      setIsCopyModalOpen(false);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      alert('Gagal menyalin ke clipboard.');
+    });
+  };
+
+  const toggleDanaSelection = (id: string) => {
+    setSelectedDanaIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -307,9 +382,14 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
           )}
         </div>
 
-        <button onClick={handleSend} className="w-full bg-[#25D366] border-none rounded-lg p-3 text-[13px] font-semibold text-white cursor-pointer flex items-center justify-center gap-2">
-          <Send size={13} strokeWidth={2.2} /> Upload
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleOpenCopyModal} className="flex-1 bg-blue-500 border-none rounded-lg p-3 text-[13px] font-semibold text-white cursor-pointer flex items-center justify-center gap-2">
+            <Copy size={13} strokeWidth={2.2} /> Salin Spreadsheet
+          </button>
+          <button onClick={handleSend} className="flex-1 bg-[#25D366] border-none rounded-lg p-3 text-[13px] font-semibold text-white cursor-pointer flex items-center justify-center gap-2">
+            <Send size={13} strokeWidth={2.2} /> Upload WA
+          </button>
+        </div>
 
         <div>
           <div className="text-[9px] text-text/35 uppercase tracking-[1.5px] mb-2">Riwayat</div>
@@ -372,6 +452,48 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
               Hapus Item Ini
             </button>
           )}
+        </div>
+      </Overlay>
+
+      {/* Copy to Spreadsheet Overlay */}
+      <Overlay isOpen={isCopyModalOpen} onClose={() => setIsCopyModalOpen(false)} title="Salin ke Spreadsheet">
+        <div className="flex flex-col gap-3 pb-6">
+          <div className="text-[11px] text-text/60 mb-2">Pilih nomor dana yang ingin disalin:</div>
+          <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+            {locData.dana?.length ? (
+              locData.dana.map((d: any) => (
+                <div 
+                  key={d.id} 
+                  onClick={() => toggleDanaSelection(d.id)}
+                  className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-colors ${
+                    selectedDanaIds.includes(d.id) ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                    selectedDanaIds.includes(d.id) ? 'bg-primary border-primary text-primary-text' : 'border-text/30'
+                  }`}>
+                    {selectedDanaIds.includes(d.id) && <CheckSquare size={14} />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-bold text-text">No. {d.noSeri}</div>
+                    <div className="text-[10px] text-text/50">{d.tgl} • {d.klasifikasi}</div>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-primary-dark">
+                    Rp {Math.round(d.total || 0).toLocaleString('id-ID')}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-[11px] text-text/30 text-center py-4">Belum ada data dana.</div>
+            )}
+          </div>
+          <button 
+            onClick={handleCopyDana} 
+            disabled={selectedDanaIds.length === 0}
+            className="w-full bg-blue-500 text-white font-bold text-xs p-3.5 rounded-xl mt-2 disabled:opacity-50"
+          >
+            Salin {selectedDanaIds.length} Data
+          </button>
         </div>
       </Overlay>
     </div>
