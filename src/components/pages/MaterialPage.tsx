@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppState, LocData } from '../../types';
 import PageHeader from '../PageHeader';
-import { Plus, Send, Search, Package, RefreshCw, Trash2, X, Edit3, Copy } from 'lucide-react';
+import { Plus, Send, Search, Package, RefreshCw, Trash2, X, Edit3, Copy, FileSpreadsheet } from 'lucide-react';
 import { capitalizeWords } from '../../utils';
 import Overlay from '../Overlay';
 
@@ -25,6 +25,17 @@ export default function MaterialPage({ state, locData, updateLocData, onBack }: 
         title="Material"
         subtitle={locName}
         onBack={onBack}
+        rightContent={
+          <a 
+            href="https://docs.google.com/spreadsheets/d/1dUAgJCx5NIDVABMPBXbHWGs6NwE1dgKI/edit?usp=drivesdk&ouid=100307049725343762177&rtpof=true&sd=true" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-600 active:bg-green-500/20 transition-colors"
+            title="Buka Spreadsheet"
+          >
+            <FileSpreadsheet size={18} />
+          </a>
+        }
       />
       
       <div className="flex gap-1 px-5 pt-2 border-b border-border shrink-0 overflow-x-auto hide-scrollbar">

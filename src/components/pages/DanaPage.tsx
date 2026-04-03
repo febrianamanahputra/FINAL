@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppState, LocData } from '../../types';
 import PageHeader from '../PageHeader';
-import { ChevronLeft, ChevronRight, RefreshCw, Plus, Camera, Send, Copy, CheckSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, Plus, Camera, Send, Copy, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import Overlay from '../Overlay';
 import { capitalizeWords } from '../../utils';
 
@@ -287,13 +287,24 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
         subtitle={locName}
         onBack={onBack}
         rightContent={
-          <div className="flex items-center gap-1">
-            <button onClick={() => handleNoSeriChange(-1)} className="w-5 h-5 border border-border bg-card rounded flex items-center justify-center text-text/50">‹</button>
-            <div className="flex items-center border border-border bg-card rounded px-1.5 py-0.5">
-              <span className="text-[10px] text-text/40 font-bold mr-0.5">#</span>
-              <input type="number" value={noSeri} onChange={e => setNoSeri(parseInt(e.target.value) || 1)} className="w-6 text-center text-sm font-bold font-mono text-text bg-transparent outline-none" />
+          <div className="flex items-center gap-2">
+            <a 
+              href="https://docs.google.com/spreadsheets/d/1WAv_c-WCeBQyfGuVjEpdCJ_BHZFadn00/edit?usp=drivesdk&ouid=100307049725343762177&rtpof=true&sd=true" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-600 active:bg-green-500/20 transition-colors"
+              title="Buka Spreadsheet"
+            >
+              <FileSpreadsheet size={16} />
+            </a>
+            <div className="flex items-center gap-1">
+              <button onClick={() => handleNoSeriChange(-1)} className="w-5 h-5 border border-border bg-card rounded flex items-center justify-center text-text/50">‹</button>
+              <div className="flex items-center border border-border bg-card rounded px-1.5 py-0.5">
+                <span className="text-[10px] text-text/40 font-bold mr-0.5">#</span>
+                <input type="number" value={noSeri} onChange={e => setNoSeri(parseInt(e.target.value) || 1)} className="w-6 text-center text-sm font-bold font-mono text-text bg-transparent outline-none" />
+              </div>
+              <button onClick={() => handleNoSeriChange(1)} className="w-5 h-5 border border-border bg-card rounded flex items-center justify-center text-text/50">›</button>
             </div>
-            <button onClick={() => handleNoSeriChange(1)} className="w-5 h-5 border border-border bg-card rounded flex items-center justify-center text-text/50">›</button>
           </div>
         }
       />
@@ -444,7 +455,7 @@ export default function DanaPage({ state, locData, updateLocData, onBack }: Dana
             </span>
           </div>
 
-          <button onClick={handleSaveItem} className="w-full bg-primary text-primary-text font-medium text-[13px] p-3 rounded-[10px]">
+          <button onClick={() => handleSaveItem()} className="w-full bg-primary text-primary-text font-medium text-[13px] p-3 rounded-[10px]">
             Simpan Item
           </button>
           {editItemIdx !== null && (
